@@ -1,0 +1,3278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>支点</title>
+<style>
+:root{
+  --bg-surface:#FFFFFF;
+  --bg-canvas:#F7F7F8;
+  --bg-subtle:#F5F5F5;
+  --bg-hover:#FAFAFB;
+  --bg-overdue:#FEF6F6;
+  --bg-soon:#FEFAF3;
+  --line:#ECECEE;
+  --line-strong:#E2E2E6;
+  --text-1:#1C1C1E;
+  --text-2:#6E6E73;
+  --text-3:#A1A1A6;
+  --accent:#2F6FED;
+  --accent-soft:#EAF1FE;
+  --danger:#E5484D;
+  --p-medium:#F5A623;
+  --shadow-panel:0 12px 40px rgba(0,0,0,.14), 0 2px 8px rgba(0,0,0,.06);
+  --shadow-card:0 14px 40px rgba(0,0,0,.16), 0 2px 8px rgba(0,0,0,.06);
+  --ease-panel:cubic-bezier(.32,.72,0,1);
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size:14px;line-height:1.5;color:var(--text-1);
+  background:#EDEFF3;-webkit-font-smoothing:antialiased;user-select:none;
+}
+button{font-family:inherit;font-size:inherit;border:none;background:none;padding:0;cursor:pointer;color:inherit}
+input,select{font-family:inherit;font-size:inherit;color:inherit}
+
+/* ================= 桌面场景 ================= */
+.wallpaper{position:fixed;inset:0;
+  background:
+    radial-gradient(1100px 700px at 12% 8%, #E8EEF9 0%, rgba(232,238,249,0) 60%),
+    radial-gradient(900px 620px at 88% 18%, #FBEFE6 0%, rgba(251,239,230,0) 62%),
+    radial-gradient(1000px 800px at 70% 92%, #EAF3EE 0%, rgba(234,243,238,0) 60%),
+    linear-gradient(160deg,#F4F6FA 0%,#F7F5F2 46%,#EEF2F7 100%);}
+.wallpaper::after{content:"";position:absolute;inset:0;
+  background-image:radial-gradient(rgba(0,0,0,.028) 1px, transparent 1px);background-size:22px 22px;}
+.menubar{position:fixed;top:0;left:0;right:0;height:26px;z-index:5;
+  display:flex;align-items:center;justify-content:space-between;padding:0 14px;
+  background:rgba(255,255,255,.62);backdrop-filter:blur(18px) saturate(1.6);
+  -webkit-backdrop-filter:blur(18px) saturate(1.6);
+  border-bottom:.5px solid rgba(0,0,0,.06);font-size:12.5px;color:#3B3B3F;}
+.menubar .mb-l,.menubar .mb-r{display:flex;align-items:center;gap:17px}
+.menubar .apple{font-size:14px;line-height:1}
+.menubar .bold{font-weight:600}
+.menubar .mb-r{gap:14px;color:#4A4A4F}
+.mb-ico{width:15px;height:15px;opacity:.72;display:block}
+.dock{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);z-index:5;
+  display:flex;align-items:flex-end;gap:9px;padding:8px 12px;
+  background:rgba(255,255,255,.42);backdrop-filter:blur(22px) saturate(1.7);
+  -webkit-backdrop-filter:blur(22px) saturate(1.7);
+  border:.5px solid rgba(255,255,255,.6);border-radius:18px;box-shadow:0 8px 26px rgba(0,0,0,.10);}
+.dock .app{width:42px;height:42px;border-radius:11px;position:relative;
+  box-shadow:0 2px 6px rgba(0,0,0,.14), inset 0 1px 0 rgba(255,255,255,.45);}
+.dock .app.on::after{content:"";position:absolute;left:50%;bottom:-5px;transform:translateX(-50%);
+  width:4px;height:4px;border-radius:50%;background:rgba(0,0,0,.45);}
+.hero{position:fixed;left:48px;top:50%;transform:translateY(-52%);z-index:4;max-width:404px;}
+.hero h1{font-size:38px;letter-spacing:-.6px;margin:0 0 4px;font-weight:600;color:#1B1B1D}
+.hero .sub{font-size:13px;color:#7A7A80;letter-spacing:2.6px;text-transform:uppercase;margin-bottom:18px}
+.hero p{font-size:14px;line-height:1.85;color:#4C4C52;margin:0 0 18px;max-width:376px}
+.hero ul{list-style:none;padding:0;margin:0 0 22px}
+.hero li{font-size:13.5px;line-height:2.05;color:#4C4C52;display:flex;gap:9px;align-items:flex-start}
+.hero li .d{width:5px;height:5px;border-radius:50%;background:var(--accent);margin-top:9px;flex:0 0 auto;opacity:.75}
+.hero .tip{display:inline-flex;align-items:center;gap:8px;padding:9px 15px;border-radius:11px;
+  background:rgba(255,255,255,.78);border:1px solid rgba(0,0,0,.05);box-shadow:0 4px 14px rgba(0,0,0,.06);
+  font-size:13px;color:#3B3B3F;}
+.hero .tip kbd{font-family:inherit;background:var(--bg-subtle);border:1px solid var(--line-strong);
+  border-bottom-width:2px;border-radius:5px;padding:1px 5px;font-size:11.5px;color:#4A4A4F;}
+
+/* ================= 演示控制台 ================= */
+.console{position:fixed;top:42px;left:16px;z-index:40;width:290px;
+  background:rgba(255,255,255,.92);backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(0,0,0,.07);border-radius:13px;
+  box-shadow:0 10px 30px rgba(0,0,0,.09);overflow:hidden;}
+.console .c-head{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 13px;border-bottom:1px solid var(--line);
+  font-size:12px;font-weight:600;color:var(--text-2);letter-spacing:.4px;}
+.console .c-head .c-x{font-size:15px;color:var(--text-3);line-height:1}
+.console .c-head .c-x:hover{color:var(--text-1)}
+.console .c-body{padding:11px 13px 13px}
+.console .c-lab{font-size:10.5px;color:var(--text-3);letter-spacing:.5px;margin:0 0 5px}
+.console .c-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:11px}
+.console .c-btn{font-size:11.5px;padding:5px 10px;border-radius:7px;background:var(--bg-subtle);
+  color:#4A4A4F;border:1px solid transparent;transition:background .14s,color .14s,border-color .14s}
+.console .c-btn:hover{background:#EDEDF0;color:var(--text-1)}
+.console .c-btn.danger:hover{background:#FDEDED;color:var(--danger)}
+.console .c-btn.on{background:var(--accent-soft);color:var(--accent);border-color:rgba(47,111,237,.3);font-weight:600}
+.console .c-hint{font-size:11px;color:var(--text-3);line-height:1.9;margin-bottom:10px}
+.console .c-hint i{font-style:normal;color:var(--text-2)}
+.console .c-ico-lab{font-size:10.5px;color:var(--text-3);letter-spacing:.5px;margin:0 0 5px}
+.console .c-ico-prev{display:flex;align-items:flex-end;gap:8px;margin-bottom:10px}
+.console .c-ico-prev svg{width:64px;height:64px;border-radius:14px;box-shadow:0 3px 9px rgba(0,0,0,.14)}
+.console .c-ico-prev svg.sm{width:32px;height:32px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.console .c-stat{font-size:11px;color:var(--text-3);line-height:1.75;border-top:1px solid var(--line);padding-top:9px}
+.console .c-stat b{color:var(--text-2);font-weight:600}
+.console.min{width:auto}
+.console.min .c-body{display:none}
+
+/* ================= 悬浮球 ================= */
+.orb{position:fixed;z-index:50;width:52px;height:52px;border-radius:50%;
+  background:rgba(255,255,255,.94);border:1px solid rgba(0,0,0,.06);
+  box-shadow:0 6px 18px rgba(0,0,0,.13), 0 1px 3px rgba(0,0,0,.07), inset 0 1px 0 rgba(255,255,255,.9);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:transform .14s ease-out, box-shadow .14s ease-out, border-color .14s ease;
+  touch-action:none;-webkit-user-drag:none;}
+.orb:hover{transform:scale(1.06);box-shadow:0 10px 26px rgba(0,0,0,.17), 0 1px 3px rgba(0,0,0,.08)}
+.orb.dragging{transition:none;transform:scale(1.08);box-shadow:0 14px 32px rgba(0,0,0,.20)}
+.orb.pinned{border-color:rgba(47,111,237,.55);box-shadow:0 0 0 3px rgba(47,111,237,.10), 0 8px 22px rgba(0,0,0,.15)}
+.orb svg.glyph{width:23px;height:23px;color:var(--accent);pointer-events:none}
+.orb .badge{position:absolute;top:-3px;right:-3px;min-width:19px;height:19px;padding:0 5px;
+  border-radius:10px;background:var(--danger);color:#fff;font-size:11px;font-weight:600;
+  line-height:19px;text-align:center;font-variant-numeric:tabular-nums;
+  box-shadow:0 1px 3px rgba(229,72,77,.4), 0 0 0 2px rgba(255,255,255,.95);
+  transition:transform .18s var(--ease-panel), opacity .16s ease;}
+.orb .badge.hide{transform:scale(.4);opacity:0}
+.orb .pring{position:absolute;inset:-4px;border-radius:50%;border:1.5px solid var(--accent);opacity:0;pointer-events:none}
+.orb .ering{position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--p-medium);opacity:0;pointer-events:none}
+.orb.urgent .ering{animation:eringPulse 2s ease-in-out infinite}
+@keyframes pulseRing{0%{transform:scale(.86);opacity:.55}100%{transform:scale(1.28);opacity:0}}
+@keyframes eringPulse{0%{transform:scale(.9);opacity:.6}70%{transform:scale(1.22);opacity:0}100%{opacity:0}}
+
+/* 首次引导 */
+.coach{position:fixed;z-index:55;max-width:196px;background:#fff;border:1px solid rgba(0,0,0,.07);
+  border-radius:11px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:11px 13px;
+  font-size:12.5px;line-height:1.6;color:#3B3B3F;opacity:0;transform:translateY(5px);
+  transition:opacity .22s ease,transform .22s ease;pointer-events:none}
+.coach.show{opacity:1;transform:none}
+.coach.flip .arw{right:auto;left:-5px;transform:rotate(135deg)}
+.coach b{display:block;font-size:12.5px;margin-bottom:2px}
+.coach span{color:var(--text-3);font-size:11.5px}
+.coach .arw{position:absolute;width:9px;height:9px;background:#fff;
+  border-right:1px solid rgba(0,0,0,.07);border-bottom:1px solid rgba(0,0,0,.07)}
+
+/* ================= 提醒卡片 ================= */
+.rcard{position:fixed;z-index:47;width:268px;background:#fff;border-radius:14px;
+  border:1px solid rgba(0,0,0,.06);box-shadow:var(--shadow-card);overflow:hidden;
+  opacity:0;transform:translateX(10px) scale(.97);pointer-events:none;
+  transition:opacity .12s ease-in, transform .12s ease-in}
+.rcard.show{opacity:1;transform:none;pointer-events:auto;
+  transition:opacity .18s var(--ease-panel), transform .22s var(--ease-panel)}
+.rcard .rc-bar{position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
+.rcard .rc-body{padding:13px 15px 13px 18px}
+.rcard .rc-title{font-size:13.5px;font-weight:500;line-height:1.45;margin-bottom:6px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rcard .rc-sub{display:flex;align-items:baseline;gap:0;flex-wrap:wrap;margin-bottom:11px}
+.rcard .rc-remain{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;
+  white-space:nowrap;color:var(--accent)}
+.rcard .rc-more{font-size:11.5px;color:var(--text-3);font-variant-numeric:tabular-nums}
+.rcard .rc-more::before{content:"·";margin:0 6px;color:var(--text-3)}
+.rcard .rc-acts{display:flex;gap:7px}
+.rcard .rc-btn{height:28px;padding:0 14px;border-radius:8px;font-size:12.5px;font-weight:500;
+  background:var(--accent);color:#fff;transition:background .14s}
+.rcard .rc-btn:hover{background:#2A63D6}
+.rcard .rc-btn.sec{background:var(--bg-subtle);color:#3B3B3F;font-weight:400}
+.rcard .rc-btn.sec:hover{background:#E8E8EC}
+.rcard.lv-p1h .rc-bar{background:var(--p-medium)}
+.rcard.lv-p1h .rc-remain{color:#B07414}
+.rcard.lv-p1h .rc-btn{background:var(--p-medium)}
+.rcard.lv-p1h .rc-btn:hover{background:#E09612}
+.rcard.lv-p10 .rc-bar{background:var(--danger)}
+.rcard.lv-p10 .rc-remain{color:var(--danger)}
+.rcard.lv-p10 .rc-btn{background:var(--danger)}
+.rcard.lv-p10 .rc-btn:hover{background:#D13C41}
+
+/* ================= 面板 ================= */
+.panel{position:fixed;z-index:45;width:430px;max-height:calc(100vh - 24px);background:var(--bg-surface);
+  border:1px solid rgba(0,0,0,.06);border-radius:16px;box-shadow:var(--shadow-panel);
+  display:flex;flex-direction:column;overflow:hidden;opacity:0;transform:scale(.96);
+  pointer-events:none;transition:opacity .18s ease-in, transform .18s ease-in;}
+.panel.open{opacity:1;transform:scale(1);pointer-events:auto;
+  transition:opacity .22s var(--ease-panel), transform .22s var(--ease-panel)}
+
+.p-head{display:flex;align-items:center;justify-content:space-between;padding:13px 12px 9px 16px;flex:0 0 auto}
+.p-count{font-size:12px;color:var(--text-2);font-variant-numeric:tabular-nums}
+.p-count b{color:var(--text-1);font-weight:600}
+.p-count .warn{color:var(--danger);font-weight:600}
+.p-actions{display:flex;align-items:center;gap:1px}
+.icon-btn{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  color:var(--text-3);transition:background .14s,color .14s}
+.icon-btn:hover{background:var(--bg-subtle);color:var(--text-1)}
+.icon-btn.on{color:var(--accent);background:var(--accent-soft)}
+.icon-btn svg{width:15px;height:15px;display:block}
+
+.p-search{padding:0 16px 10px;flex:0 0 auto}
+.search-wrap{position:relative;display:flex;align-items:center}
+.search-wrap>svg{position:absolute;left:9px;width:14px;height:14px;color:var(--text-3);pointer-events:none}
+.p-search input{width:100%;height:32px;padding:0 30px 0 29px;background:var(--bg-subtle);
+  border:1px solid transparent;border-radius:8px;font-size:13px;outline:none;
+  transition:background .14s,border-color .14s;user-select:text}
+.p-search input::placeholder{color:var(--text-3)}
+.p-search input:focus{background:#fff;border-color:rgba(47,111,237,.35)}
+.search-clear{position:absolute;right:7px;width:18px;height:18px;border-radius:50%;display:none;
+  align-items:center;justify-content:center;color:var(--text-3);background:rgba(0,0,0,.06)}
+.search-clear:hover{color:var(--text-1);background:rgba(0,0,0,.1)}
+.search-clear.show{display:flex}
+.search-clear svg{width:9px;height:9px}
+
+.p-tabs{display:flex;align-items:center;gap:2px;padding:0 12px;border-bottom:1px solid var(--line);
+  flex:0 0 auto;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+.p-tabs::-webkit-scrollbar{display:none}
+.tab{position:relative;flex:0 0 auto;padding:0 9px 9px;font-size:13px;color:var(--text-2);
+  white-space:nowrap;transition:color .14s}
+.tab:hover{color:var(--text-1)}
+.tab.active{color:var(--accent);font-weight:500}
+.tab.active::after{content:"";position:absolute;left:6px;right:6px;bottom:-1px;height:2px;
+  border-radius:1px;background:var(--accent)}
+.tab .cnt{font-size:11px;color:var(--text-3);margin-left:3px;font-variant-numeric:tabular-nums}
+.tab.active .cnt{color:var(--accent);opacity:.7}
+.tab-add{flex:0 0 auto;width:24px;height:24px;margin:0 0 5px 2px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;color:var(--text-3);transition:background .14s,color .14s}
+.tab-add:hover{background:var(--bg-subtle);color:var(--accent)}
+.tab-add svg{width:13px;height:13px}
+/* 清单 tab 拖动排序（V1.7 / FR-18）：
+   按住 tab 本体即拖，位移超过 4px 才判定为拖动 —— 因此「点击切换清单」完全不受影响；
+   拖动中相邻 tab 用 FLIP 让位，被拖的 tab 抬升为浮层质感。
+   「全部」固定首位、「+」固定末位，只有用户自建的清单参与排序 */
+.tab[data-list]:not([data-list="all"]){cursor:grab}
+.tab[data-list]:not([data-list="all"]).tab-drag{cursor:grabbing}
+.tab.tab-drag{color:var(--text-1);background:#fff;z-index:3;
+  box-shadow:0 4px 14px rgba(0,0,0,.13);border-radius:8px 8px 0 0}
+.p-tabs.dragging{user-select:none;-webkit-user-select:none}
+.tab-input{flex:0 0 auto;width:86px;margin:0 4px 5px;height:24px;padding:0 7px;
+  border:1px solid rgba(47,111,237,.35);border-radius:7px;font-size:12.5px;outline:none;background:#fff;user-select:text}
+
+.p-tagbar{display:flex;align-items:center;gap:5px;padding:9px 16px;border-bottom:1px solid var(--line);
+  flex:0 0 auto;overflow-x:auto;scrollbar-width:none}
+.p-tagbar::-webkit-scrollbar{display:none}
+.p-tagbar.hide{display:none}
+.p-list{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;padding:6px 8px 4px;min-height:0;max-height:372px}
+.p-list::-webkit-scrollbar{width:7px}
+.p-list::-webkit-scrollbar-thumb{background:rgba(0,0,0,.13);border-radius:4px;border:2px solid #fff}
+.p-list::-webkit-scrollbar-track{background:transparent}
+
+.zone{border-radius:10px;padding:7px 0 5px;margin:0 -4px 9px}
+.zone-overdue{background:var(--bg-overdue)}
+.zone-soon{background:var(--bg-soon)}
+.zone-h{font-size:11.5px;font-weight:500;letter-spacing:.3px;padding:1px 11px 6px}
+.zone-overdue .zone-h{color:var(--danger)}
+.zone-soon .zone-h{color:#B07414}
+/* 分区内行：内边距 7 → 11px，抵消分区 -4px 外扩，保证跨分区列对齐（CH-36） */
+.zone .todo{padding:0 11px}
+.zone .todo.drop-before::before,.zone .todo.drop-after::after{left:11px;right:11px}
+.done-sep{display:flex;align-items:center;justify-content:space-between;padding:13px 7px 6px;
+  margin-top:2px;border-top:1px solid var(--line)}
+.done-sep .lbl{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--text-3);letter-spacing:.3px}
+.done-sep .lbl svg{width:10px;height:10px;transition:transform .16s}
+.done-sep .lbl.folded svg{transform:rotate(-90deg)}
+/* 分隔栏轻脉冲（V1.7 / FR-21.4）：飞勾命中「已完成」区时的一次确认，约 400ms */
+.done-sep .lbl.pulse{animation:lblPulse .4s ease-out}
+/* 「清空」小按钮（V1.9.3 / FR-28.1）：常显但低存在感，悬停才染危险色 */
+.done-sep .clr{font-size:11px;color:var(--text-3);padding:3px 9px;border-radius:6px;
+  transition:background .12s,color .12s;flex:none}
+.done-sep .clr:hover{background:#FDEDED;color:var(--danger)}
+@keyframes lblPulse{0%{transform:scale(1);color:var(--text-3)}
+  34%{transform:scale(1.07);color:var(--accent)}100%{transform:scale(1);color:var(--text-3)}}
+
+.todo{position:relative;display:flex;align-items:center;gap:8px;min-height:40px;padding:0 7px;
+  border-radius:8px;transition:background .12s}
+.todo:hover{background:var(--bg-hover)}
+.todo.dragging{opacity:.45;background:var(--accent-soft)}
+.todo.drop-before::before{content:"";position:absolute;left:7px;right:7px;top:-1px;height:2px;
+  border-radius:1px;background:var(--accent)}
+.todo.drop-after::after{content:"";position:absolute;left:7px;right:7px;bottom:-1px;height:2px;
+  border-radius:1px;background:var(--accent)}
+/* 落点序号预览（V1.9 / FR-23）：拖动途中直接告诉用户「松手后是几号」，
+   避免跨分区拖动后因分区重排导致位置回退、用户误判为没生效 */
+.drop-hint{position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:3;
+  font-size:11px;font-weight:600;letter-spacing:.2px;color:#fff;background:var(--accent);
+  padding:2px 6px;border-radius:6px;pointer-events:none;white-space:nowrap;
+  font-variant-numeric:tabular-nums;box-shadow:0 1px 4px rgba(47,111,237,.35)}
+.todo.removing{opacity:0;transform:translateX(6px);transition:opacity .18s ease-in,transform .18s ease-in}
+
+.rank{flex:0 0 auto;width:20px;height:20px;border-radius:6px;display:flex;align-items:center;
+  justify-content:center;font-size:12.5px;font-weight:600;
+  font-variant-numeric:tabular-nums;background:var(--bg-subtle);color:var(--text-3);
+  transition:background .15s,color .15s}
+.rank.r1{background:var(--accent);color:#fff}
+.rank.r2{background:var(--accent-soft);color:var(--accent)}
+.rank.none{background:transparent}
+
+/* 完成控件（V1.6 / CH-26）：圆点 → 圆角方形复选框。
+   方形是「勾选完成」的通用语义；圆形会被读成「单选/选中」，语义与实际动作不符。
+   按钮 26×26 是点击热区，视觉方块 16×16 居中；两侧 -5px 负外边距使行内占位与 V1.5 的 16px 完全一致，
+   因此标题、清单名、时间列的横向位置不因本次改动发生任何位移。 */
+.check{flex:0 0 auto;width:26px;height:26px;margin:0 -5px;padding:0;border:0;background:none;
+  display:flex;align-items:center;justify-content:center;border-radius:7px;position:relative}
+.check:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.check .box{position:relative;width:16px;height:16px;box-sizing:border-box;border-radius:5px;
+  border:1.5px solid var(--line-strong);background:#fff;
+  transition:border-color .15s,background .15s,transform .15s}
+.check .box::before{content:"";position:absolute;left:0;top:0;right:0;bottom:0;border-radius:4px;
+  background:var(--accent);transform:scale(.25);opacity:0;
+  transition:transform .2s cubic-bezier(.34,1.56,.64,1),opacity .1s}
+.check:hover .box{border-color:var(--accent);background:rgba(47,111,237,.07)}
+/* 勾：一条 stroke-dashoffset 描边。悬停时以半透明勾预览，明确告诉用户「点这里＝完成」 */
+.check .tick{position:absolute;left:50%;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;pointer-events:none}
+.check .tick path{fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:20;stroke-dashoffset:20;opacity:0;
+  transition:stroke-dashoffset .18s ease-out,stroke .1s,opacity .1s}
+.check:hover .tick path{stroke:var(--accent);opacity:.4;stroke-dashoffset:0}
+/* 完成瞬间（.completing）：方块填充弹出 + 勾描边画出来 */
+.todo.completing .check .box{border-color:var(--accent);
+  animation:chkPop .34s cubic-bezier(.34,1.56,.64,1)}
+.todo.completing .check .box::before{opacity:1;transform:scale(1)}
+.todo.completing .check .tick path{stroke:#fff;opacity:1;stroke-dashoffset:0;
+  transition:stroke-dashoffset .18s ease-out .06s,opacity .08s .06s}
+@keyframes chkPop{0%{transform:scale(.88)}45%{transform:scale(1.16)}100%{transform:scale(1)}}
+/* 落定态（重渲染后的 .done）：灰底白勾 —— 与「未完成」形成状态差，而不是「被选中」 */
+.todo.done .check .box{border-color:rgba(0,0,0,.13);background:rgba(0,0,0,.13)}
+.todo.done .check .box::before{opacity:0}
+.todo.done .check .tick path{stroke:#fff;opacity:1;stroke-dashoffset:0;transition:none}
+.todo.done .check:hover .box{background:rgba(0,0,0,.2)}
+
+.todo .title{flex:1 1 auto;min-width:0;position:relative;font-size:14px;line-height:1.4;
+  color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 删除线扫过：V1.6 起是「完成序列」的一环（左→右 220ms，与勾描边同步起跑 / FR-17.2） */
+.todo .title::after{content:"";position:absolute;left:0;top:calc(50% - 1px);height:1px;width:100%;
+  background:currentColor;transform:scaleX(0);transform-origin:left;
+  transition:transform .22s cubic-bezier(.4,0,.2,1)}
+.todo.completing .title{color:var(--text-3)}
+.todo.completing .title::after{transform:scaleX(1)}
+.todo.done .title{color:var(--text-3);text-decoration:line-through}
+.todo.done{opacity:.45}
+.todo.done:hover{opacity:1}
+.todo .title-input{flex:1 1 auto;min-width:0;height:26px;padding:0 7px;
+  border:1px solid rgba(47,111,237,.4);border-radius:7px;background:#fff;font-size:14px;outline:none;user-select:text}
+
+.due{flex:0 0 auto;display:inline-flex;align-items:center;font-size:11.5px;
+  font-variant-numeric:tabular-nums;white-space:nowrap;padding:2px 5px;border-radius:6px;
+  background:transparent;transition:background .14s,color .14s}
+.due:hover{background:rgba(0,0,0,.055)}
+.due.lv-later{color:var(--text-3)}
+.due.lv-p1d{color:var(--text-2)}
+.due.lv-p1h{color:var(--p-medium)}
+.due.lv-p10{color:var(--danger)}
+.due.lv-overdue{color:var(--danger);font-weight:600}
+.due.ghost{opacity:0;pointer-events:none;color:var(--text-3)}
+.todo:hover .due.ghost{opacity:1;pointer-events:auto}
+/* 时间列：V1.5 固定最小宽度 + 右对齐，使左侧清单名列不随时间文案长度漂移（对齐修正）
+   min-width 而非固定 width：极端长文案（如「12月31日 18:00」）允许该行单独变宽，不裁字 */
+.due-w{flex:0 0 auto;min-width:90px;display:flex;align-items:center;justify-content:flex-end}
+.dotbreath{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--danger);
+  margin-right:5px;animation:breath 1.5s ease-in-out infinite}
+@keyframes breath{0%,100%{opacity:1}50%{opacity:.22}}
+
+/* 清单名：V1.5 改固定宽度列，保证每行同一竖线起始（对齐修正）
+   V1.7：改为可点按钮（换分类入口 FR-19）。列宽仍是 54px，
+   省略号交给内层 span 承担 —— 因此标题 / 时间列的横向位置零位移 */
+.lm{flex:0 0 54px;font-size:11px;color:var(--text-3);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;padding-left:7px;border-left:1px solid var(--line)}
+button.lm{display:block;box-sizing:border-box;background:none;border:0;
+  border-left:1px solid var(--line);font-family:inherit;line-height:1.55;text-align:left;
+  border-radius:0 6px 6px 0;transition:color .14s,background .14s;cursor:pointer}
+button.lm>span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+button.lm:hover{color:var(--accent);background:rgba(47,111,237,.08)}
+button.lm:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+/* 全局第 1 优先级：整行底色突出（与逾期红底同一手法，强调蓝） */
+.todo.top1{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.todo.top1:hover{background:#DFEAFD}
+/* 整行闪光（V1.6 / FR-17.3）：提示「这一行刚刚被处理」，与随后的沉底动画接力 */
+.todo.completing{animation:rowFlash .62s ease-out}
+@keyframes rowFlash{0%{background:var(--accent-soft)}62%{background:var(--accent-soft)}100%{background:transparent}}
+
+/* 完成动效（V1.6 / CH-27）：涟漪 + 微粒迸发。
+   锚点是真实勾选框中心，由 JS 写入 --cx/--cy（相对行的坐标）——
+   不用硬编码像素，避免清单名/时间列宽度变化造成锚点漂移 */
+.burst{position:absolute;left:var(--cx,43px);top:var(--cy,20px);width:0;height:0;z-index:2;pointer-events:none}
+.burst .ring{position:absolute;left:-9px;top:-9px;width:18px;height:18px;border-radius:50%;
+  border:1.5px solid var(--accent);opacity:0;
+  animation:ringOut .46s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes ringOut{0%{transform:scale(.34);opacity:.5}55%{opacity:.26}100%{transform:scale(2.7);opacity:0}}
+.burst .spark{position:absolute;left:-1.6px;top:-1.6px;width:3.2px;height:3.2px;border-radius:50%;
+  background:var(--accent);opacity:0;
+  animation:sparkOut .42s cubic-bezier(.22,.68,.4,1) forwards}
+.burst .spark.gold{background:#E8A33D}
+@keyframes sparkOut{0%{transform:translate(0,0) scale(.5);opacity:.95}
+  50%{opacity:.9}100%{transform:translate(var(--tx,16px),var(--ty,0)) scale(.3);opacity:0}}
+
+/* 勾飞入「已完成」区（V1.7 / FR-21）：完成序列的收尾一拍。
+   起飞锚点是勾选框真实中心、落点是「已完成」分隔栏，弧线由 JS 用 Web Animations 驱动。
+   元素挂在 .panel 下而不是行内 —— 列表重渲染抹不掉飞行中的勾（与 due-pop / note-pop 同规则） */
+.fly-tick{position:absolute;z-index:9;width:20px;height:20px;margin:-10px 0 0 -10px;
+  border-radius:6px;background:var(--accent);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 5px 14px rgba(47,111,237,.32);pointer-events:none}
+.fly-tick svg{width:13px;height:13px;display:block}
+
+/* 全部完成庆祝（V1.6 / FR-17.5）：当前视图内再无未完成项时出现，1.6s 后自动淡出。
+   z-index 低于 due-pop(12) / note-pop(15)：弹层开着时庆祝不会盖住它 */
+.celebrate{position:absolute;left:0;right:0;top:0;height:auto;z-index:10;display:flex;
+  align-items:center;justify-content:center;background:rgba(255,255,255,.88);
+  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+  opacity:0;transition:opacity .22s ease-out;pointer-events:none}
+.celebrate[hidden]{display:none}
+.celebrate.show{opacity:1}
+.cel-in{display:flex;flex-direction:column;align-items:center;
+  transform:scale(.92);transition:transform .32s cubic-bezier(.34,1.4,.64,1)}
+.celebrate.show .cel-in{transform:scale(1)}
+.cel-mark{position:relative;width:52px;height:52px;border-radius:16px;background:var(--accent);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 22px rgba(47,111,237,.28)}
+.cel-mark svg{width:26px;height:26px}
+.cel-tick{stroke-dasharray:26;stroke-dashoffset:26}
+.celebrate.show .cel-tick{animation:celDraw .44s cubic-bezier(.4,0,.2,1) .14s forwards}
+@keyframes celDraw{to{stroke-dashoffset:0}}
+.cel-ring{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;
+  border-radius:16px;border:1.5px solid var(--accent);opacity:0}
+.celebrate.show .cel-ring{animation:celRing 1s cubic-bezier(.2,.7,.3,1) .2s}
+@keyframes celRing{0%{transform:scale(1);opacity:.45}100%{transform:scale(2.1);opacity:0}}
+.cel-t{margin-top:14px;font-size:15px;font-weight:600;color:var(--text-1);letter-spacing:.2px}
+.cel-s{margin-top:5px;font-size:12px;color:var(--text-3)}
+/* 减动效：显式兜底，不依赖全局的 animation-duration:.01ms（延迟仍会生效，勾会晚 140ms 才出现） */
+@media (prefers-reduced-motion:reduce){
+  .todo.completing .check .box{animation:none}
+  .todo.completing{animation:none}
+  .celebrate .cel-in{transform:none;transition:none}
+  .celebrate.show .cel-tick{animation:none;stroke-dashoffset:0}
+  .celebrate.show .cel-ring{animation:none}
+}
+.note-ic{flex:0 0 auto;width:20px;height:20px;border-radius:6px;display:flex;align-items:center;
+  justify-content:center;color:#B8B8BE;transition:color .12s,background .12s}
+.note-ic:hover{color:var(--accent);background:rgba(47,111,237,.08)}
+.note-ic svg{width:12px;height:12px}
+.row-btn{flex:0 0 auto;width:20px;height:20px;border-radius:6px;display:flex;align-items:center;
+  justify-content:center;color:var(--text-3);opacity:0;
+  transition:opacity .12s,background .12s,color .12s}
+.todo:hover .row-btn{opacity:1}
+.row-btn:hover{background:rgba(0,0,0,.06);color:var(--text-1)}
+.row-btn.del:hover{color:var(--danger);background:#FDEDED}
+.row-btn svg{width:12px;height:12px}
+
+.empty{padding:34px 20px 30px;text-align:center}
+.empty .e-t{font-size:13.5px;color:var(--text-2);margin-bottom:5px}
+.empty .e-s{font-size:12px;color:var(--text-3);line-height:1.7}
+.empty .e-b{display:inline-block;margin-top:13px;font-size:12px;color:var(--accent);
+  padding:5px 12px;border-radius:8px;background:var(--accent-soft)}
+.empty .e-b:hover{background:#DFEAFD}
+.empty svg{width:26px;height:26px;color:#D8D8DC;margin-bottom:11px}
+
+.composer{position:relative;flex:0 0 auto;border-top:1px solid var(--line);padding:9px 16px 12px;background:#fff}
+.composer-meta{display:none;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:9px}
+.composer.expanded .composer-meta{display:flex}
+.due-btn{display:inline-flex;align-items:center;gap:5px;height:25px;padding:0 9px;border-radius:8px;
+  background:var(--bg-subtle);font-size:12px;color:var(--text-2);
+  transition:background .14s,color .14s;white-space:nowrap;font-variant-numeric:tabular-nums}
+.due-btn:hover{background:#EDEDF0}
+.due-btn.on{background:var(--accent-soft);color:var(--accent)}
+.due-btn svg{width:12px;height:12px;flex:0 0 auto}
+.list-select{height:25px;padding:0 5px;border-radius:8px;background:var(--bg-subtle);
+  border:1px solid transparent;font-size:12px;color:var(--text-2);outline:none;cursor:pointer;
+  -webkit-appearance:none;appearance:none;padding-right:16px;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M3 5l3 3 3-3' fill='none' stroke='%23A1A1A6' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat:no-repeat;background-position:right 4px center;background-size:11px}
+.input-row{display:flex;align-items:center;gap:8px}
+.input-row .plus{color:var(--accent);font-size:16px;line-height:1;flex:0 0 auto;margin-top:-1px}
+.input-row input{flex:1 1 auto;min-width:0;height:28px;border:none;outline:none;background:none;
+  font-size:14px;user-select:text}
+.input-row input::placeholder{color:var(--text-3)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.composer.shake .input-row{animation:shake .2s ease}
+
+/* 截止时间选择器：定位基准是 .panel（因为它是 .panel 的直接子元素） */
+.due-pop{position:absolute;left:14px;right:14px;top:12px;bottom:auto;z-index:12;
+  background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:12px;
+  box-shadow:0 12px 34px rgba(0,0,0,.15);padding:11px;
+  opacity:0;transform:translateY(6px) scale(.98);transform-origin:bottom center;
+  pointer-events:none;transition:opacity .15s ease,transform .15s var(--ease-panel)}
+.due-pop.show{opacity:1;transform:none;pointer-events:auto}
+.dp-row{display:flex;flex-wrap:wrap;gap:5px}
+.dp{font-size:11.5px;padding:5px 9px;border-radius:7px;background:var(--bg-subtle);color:#4A4A4F;
+  transition:background .12s,color .12s;font-variant-numeric:tabular-nums}
+.dp:hover{background:var(--accent-soft);color:var(--accent)}
+.dp-sep{height:1px;background:var(--line);margin:10px 0}
+.dp-custom{display:flex;align-items:center;gap:6px}
+.dp-custom input{height:26px;padding:0 7px;border-radius:7px;border:1px solid var(--line-strong);
+  background:#fff;font-size:12px;outline:none;user-select:text}
+.dp-custom input[type="date"]{flex:1 1 auto;min-width:0}
+.dp-custom input[type="time"]{width:82px;flex:0 0 auto}
+.dp-custom input:focus{border-color:rgba(47,111,237,.45)}
+.dp-ok{height:26px;padding:0 12px;border-radius:7px;background:var(--accent);color:#fff;
+  font-size:12px;flex:0 0 auto;transition:background .14s}
+.dp-ok:hover{background:#2A63D6}
+.dp-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.dp-tip{font-size:10.5px;color:var(--text-3)}
+.dp-clear{font-size:11.5px;color:var(--text-3);padding:4px 6px;border-radius:6px;transition:color .14s,background .14s}
+.dp-clear:hover{color:var(--danger);background:#FDEDED}
+/* 预设按钮选中态（V1.5：默认今晚 23:59 打开时即可见） */
+.dp.on{background:var(--accent-soft);color:var(--accent)}
+/* 新建流程中的备注输入（V1.7 / FR-20）：与时间同屏带出、默认空，回车即创建 */
+.dp-note{display:none;margin-top:9px;padding-top:9px;border-top:1px solid var(--line)}
+.dp-note.show{display:block}
+.dp-note input{width:100%;height:28px;box-sizing:border-box;padding:0 9px;border-radius:7px;
+  border:1px solid var(--line-strong);background:#fff;font-size:12.5px;outline:none;
+  font-family:inherit;user-select:text}
+.dp-note input:focus{border-color:rgba(47,111,237,.45)}
+.dp-note input::placeholder{color:var(--text-3)}
+
+/* 备注悬停气泡：定位基准是 .panel，pointer-events:none 不挡操作 */
+.note-tip{position:absolute;left:14px;z-index:14;max-width:270px;padding:7px 10px;
+  background:#3C3C43;color:#fff;font-size:11.5px;line-height:1.55;border-radius:8px;
+  box-shadow:0 8px 22px rgba(0,0,0,.22);pointer-events:none;
+  white-space:pre-wrap;word-break:break-word}
+/* 备注编辑器 */
+.note-pop{position:absolute;z-index:15;width:248px;background:#fff;
+  border:1px solid rgba(0,0,0,.08);border-radius:12px;
+  box-shadow:0 12px 34px rgba(0,0,0,.15);padding:10px}
+.note-pop textarea{width:100%;min-height:60px;resize:vertical;border:1px solid var(--line-strong);
+  border-radius:8px;padding:7px 9px;font-size:12.5px;line-height:1.55;outline:none;
+  font-family:inherit;user-select:text;background:#fff}
+.note-pop textarea:focus{border-color:rgba(47,111,237,.45)}
+.np-foot{display:flex;align-items:center;gap:6px;margin-top:8px}
+.np-tip{flex:1 1 auto;font-size:10.5px;color:var(--text-3)}
+.np-clear{font-size:11.5px;color:var(--text-3);padding:4px 7px;border-radius:6px;transition:color .14s,background .14s}
+.np-clear:hover{color:var(--danger);background:#FDEDED}
+.np-ok{height:24px;padding:0 12px;border-radius:7px;background:var(--accent);color:#fff;
+  font-size:11.5px;flex:0 0 auto;transition:background .14s}
+.np-ok:hover{background:#2A63D6}
+
+/* 更换清单下拉（V1.7 / FR-19）：单选列表，当前清单带勾并高亮。
+   .panel 的直接子元素 —— 与 due-pop / note-pop 同规则，避免被 .p-list 的 overflow 裁掉 */
+.move-pop{position:absolute;z-index:16;min-width:152px;max-width:224px;background:#fff;
+  border:1px solid rgba(0,0,0,.08);border-radius:11px;
+  box-shadow:0 12px 30px rgba(0,0,0,.16);padding:5px;display:none;transform-origin:top left}
+.move-pop.show{display:block;animation:mpIn .14s cubic-bezier(.2,.9,.3,1)}
+@keyframes mpIn{from{opacity:0;transform:translateY(-4px) scale(.97)}to{opacity:1;transform:none}}
+.mp-h{font-size:10.5px;color:var(--text-3);padding:3px 8px 5px;letter-spacing:.3px}
+.mp-list{max-height:188px;overflow-y:auto}
+.move-pop button{display:flex;align-items:center;gap:6px;width:100%;height:29px;padding:0 8px;
+  border:0;background:none;border-radius:7px;font-size:12.5px;color:var(--text-1);
+  font-family:inherit;text-align:left;transition:background .12s,color .12s}
+.move-pop button:hover{background:var(--bg-subtle)}
+.move-pop button.on{color:var(--accent);font-weight:500}
+.move-pop .mp-t{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.move-pop .mp-ck{flex:0 0 auto;width:13px;height:13px;opacity:0;transition:opacity .12s}
+.move-pop button.on .mp-ck{opacity:1}
+
+.storage-warn{display:none;font-size:11.5px;color:#8A6A2B;background:#FDF7E8;
+  padding:6px 16px;border-bottom:1px solid #F3E6C9}
+.storage-warn.show{display:block}
+
+.menu{position:absolute;z-index:60;min-width:176px;padding:5px;background:rgba(255,255,255,.97);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border:1px solid rgba(0,0,0,.08);border-radius:11px;box-shadow:0 10px 30px rgba(0,0,0,.14);
+  opacity:0;transform:scale(.97);transform-origin:top right;
+  transition:opacity .13s ease,transform .13s ease;pointer-events:none}
+.menu.open{opacity:1;transform:none;pointer-events:auto}
+.menu button{display:flex;align-items:center;width:100%;padding:7px 10px;border-radius:7px;
+  font-size:12.5px;color:#3B3B3F;text-align:left;gap:8px}
+.menu button:hover{background:var(--accent-soft);color:var(--accent)}
+.menu button.danger:hover{background:#FDEDED;color:var(--danger)}
+.menu .sep{height:1px;background:var(--line);margin:4px 2px}
+.menu button svg{width:13px;height:13px;flex:0 0 auto}
+.mask{position:fixed;inset:0;z-index:80;background:transparent;   /* V1.9.4 / FR-29：无暗底无模糊 */
+  display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;
+  transition:opacity .16s ease}
+.mask.open{opacity:1;pointer-events:auto}
+.modal{width:306px;background:#fff;border-radius:14px;padding:20px 20px 15px;
+  box-shadow:0 20px 50px rgba(0,0,0,.22);transform:scale(.96);transition:transform .18s var(--ease-panel)}
+.mask.open .modal{transform:scale(1)}
+.modal h4{margin:0 0 7px;font-size:14.5px;font-weight:600}
+.modal p{margin:0 0 17px;font-size:12.5px;line-height:1.7;color:var(--text-2)}
+.modal .m-row{display:flex;justify-content:flex-end;gap:8px}
+.modal .m-btn{height:29px;padding:0 14px;border-radius:8px;font-size:12.5px;
+  background:var(--bg-subtle);color:#3B3B3F;transition:background .14s}
+.modal .m-btn:hover{background:#E8E8EC}
+.modal .m-btn.primary{background:var(--accent);color:#fff}
+.modal .m-btn.primary:hover{background:#2A63D6}
+.modal .m-btn.danger{background:var(--danger);color:#fff}
+.modal .m-btn.danger:hover{background:#D13C41}
+.toast{position:fixed;left:50%;bottom:110px;transform:translate(-50%,8px);z-index:90;
+  background:rgba(28,28,30,.88);color:#fff;font-size:12.5px;padding:8px 15px;border-radius:9px;
+  opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s var(--ease-panel);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:1100px){ .hero{left:32px;max-width:340px} .hero h1{font-size:31px} }
+@media (max-width:900px){ .hero{display:none} .console{width:256px} }
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  .panel,.rcard{transform:none !important}
+}
+</style>
+</head>
+<body>
+<noscript><div style="position:fixed;left:0;right:0;bottom:0;z-index:999;background:#FFF3CD;color:#664D03;font:13px/1.7 -apple-system,'PingFang SC',sans-serif;padding:12px 18px;text-align:center">此原型需要 JavaScript 才能交互。当前环境未启用脚本，请下载本文件后用 Safari / Chrome 直接打开。</div></noscript>
+
+<div class="wallpaper"></div>
+
+<div class="menubar">
+  <div class="mb-l">
+    <span class="apple">&#63743;</span>
+    <span class="bold">支点</span>
+    <span>文件</span><span>编辑</span><span>显示</span><span>窗口</span><span>帮助</span>
+  </div>
+  <div class="mb-r">
+    <svg class="mb-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 13a7 7 0 0114 0M2 13a10 10 0 0120 0"/><circle cx="12" cy="18" r="1.6" fill="currentColor" stroke="none"/></svg>
+    <svg class="mb-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="7" width="17" height="10" rx="3"/><path d="M19 11v2"/><rect x="4" y="9" width="12" height="6" rx="1.5" fill="currentColor" stroke="none"/></svg>
+    <span id="clock">周二 16:32</span>
+  </div>
+</div>
+
+<main class="hero">
+  <h1>支点</h1>
+  <div class="sub">支点 · V1.9.5</div>
+  <p>macOS 桌面悬浮球式待办清单。<b>序号告诉你先做哪件，时间到了它会追着你确认。</b></p>
+  <ul>
+    <li><span class="d"></span><span><b>绝对优先级</b>：唯一序号 #1 #2 #3…，拖一次即重排</span></li>
+    <li><span class="d"></span><span><b>截止时间</b>：可选日期 + 精确时间，紧迫度自动着色</span></li>
+    <li><span class="d"></span><span><b>强制确认提醒</b>：到期前 1 小时提醒一次，点确认才消失</span></li>
+    <li><span class="d"></span><span>数据只存本机，刷新不丢</span></li>
+  </ul>
+  <div class="tip">
+    把鼠标移到右下角的悬浮球上 →
+    <kbd>Esc</kbd> 收起
+  </div>
+</main>
+
+<div class="dock">
+  <div class="app" style="background:linear-gradient(155deg,#5BA9F7,#2F6FED)"></div>
+  <div class="app" style="background:linear-gradient(155deg,#FFB258,#F08030)"></div>
+  <div class="app" style="background:linear-gradient(155deg,#7BD48A,#34A853)"></div>
+  <div class="app" style="background:linear-gradient(155deg,#E4E4E9,#C9C9CF)"></div>
+  <div class="app" style="background:linear-gradient(155deg,#FF8A8A,#E5484D)"></div>
+  <div class="app on" style="background:linear-gradient(155deg,#FFFFFF,#F0F1F5);display:flex;align-items:center;justify-content:center">
+    <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="#2F6FED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5l2 2 3.5-3.5"/><path d="M13 9h7"/><path d="M4 15.5l2 2 3.5-3.5"/><path d="M13 17h7"/></svg>
+  </div>
+</div>
+
+<aside class="console" id="console">
+  <div class="c-head">
+    <span>演示控制台</span>
+    <button class="c-x" id="consoleMin" title="收起控制台">&#8211;</button>
+  </div>
+  <div class="c-body">
+    <div class="c-lab">时间加速（验证到期前 1 小时提醒）</div>
+    <div class="c-row" id="scaleRow">
+      <button class="c-btn on" data-scale="1">1× 真实</button>
+      <button class="c-btn" data-scale="60">60×</button>
+      <button class="c-btn" data-scale="600">600×</button>
+    </div>
+    <div class="c-row">
+      <button class="c-btn" id="btnForce">立即触发一条提醒</button>
+      <button class="c-btn" id="btnReset">重置示例数据</button>
+      <button class="c-btn danger" id="btnWipe">清空全部</button>
+    </div>
+    <div class="c-hint">
+      <i>悬停</i> 悬浮球展开 · <i>单击</i> 钉住 · <i>拖动</i> 球体换位置<br>
+      <i>拖动条目</i> 改序号（可跨清单 / 跨分区，途中显示「松手 → #N」） · <i>双击</i> 标题改名<br>
+      <i>点时间文字</i> 改截止 · <i>新建</i> 回车后自动带出时间<br>
+      <i>Esc</i> 对提醒卡片<b>无效</b>
+    </div>
+    <div class="c-ico-lab">App 图标 · V1.8 已定稿（白底镂空小老鼠，本轮暂缓实施）</div>
+    <div class="c-ico-lab">V1.9：拖动改为视觉顺序驱动，序号全局唯一连续，高亮全局唯一<br>V1.9.1：新建默认分类跟随当前清单；输入区展开不再被窗口下沿裁切<br>V1.9.2：分类 Tab 数字随完成/新建/删除实时更新；点球只开合，钉住须手动点钉子<br>V1.9.3：「已完成」分隔栏新增「清空」，一键清掉全部已完成项（确认弹窗防误触）<br>V1.9.4：确认弹窗去遮罩——不再压暗/模糊背景，弹窗白卡直接浮出<br>V1.9.5：应用更名为「支点」——只找那个能撬动全局的点</div>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <linearGradient id="bBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#F2F6FD"/>
+    </linearGradient>
+    <linearGradient id="bLine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5BA9F7"/><stop offset="1" stop-color="#2F6FED"/>
+    </linearGradient>
+  </defs></svg>
+    <div class="c-ico-prev"><svg viewBox="0 0 128 128" aria-label="App 图标终稿 · 白底镂空小老鼠">
+  
+  <rect width="128" height="128" rx="28" fill="url(#bBg)"/>
+  <!-- 卷尾（描边镂空） -->
+  <path d="M89 101c13 5 21-6 16-15-3-6-11-8-16-3" fill="none" stroke="url(#bLine)" stroke-width="6.6" stroke-linecap="round"/>
+  <!-- 身体：内部全白（镂空） -->
+  <ellipse cx="64" cy="97" rx="25" ry="19" fill="#FFFFFF" stroke="url(#bLine)" stroke-width="7"/>
+  <!-- 双耳 -->
+  <circle cx="38" cy="45" r="25" fill="#FFFFFF" stroke="url(#bLine)" stroke-width="7"/>
+  <circle cx="90" cy="45" r="25" fill="#FFFFFF" stroke="url(#bLine)" stroke-width="7"/>
+  <circle cx="38" cy="45" r="10.5" fill="none" stroke="url(#bLine)" stroke-width="3.8"/>
+  <circle cx="90" cy="45" r="10.5" fill="none" stroke="url(#bLine)" stroke-width="3.8"/>
+  <!-- 圆脸：内部全白（镂空） -->
+  <ellipse cx="64" cy="60" rx="36" ry="33" fill="#FFFFFF" stroke="url(#bLine)" stroke-width="7"/>
+  <!-- 镂空吻部 -->
+  <ellipse cx="64" cy="76" rx="16" ry="10.5" fill="none" stroke="url(#bLine)" stroke-width="3.8"/>
+  <circle cx="64" cy="70" r="4" fill="#1E3A8A"/>
+  <path d="M60 78q4 4 8 0" fill="none" stroke="#1E3A8A" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- 眼睛 -->
+  <circle cx="48" cy="57" r="5.2" fill="#1E3A8A"/>
+  <circle cx="80" cy="57" r="5.2" fill="#1E3A8A"/>
+  <circle cx="46.4" cy="55.2" r="1.7" fill="#FFFFFF"/>
+  <circle cx="78.4" cy="55.2" r="1.7" fill="#FFFFFF"/>
+  <!-- 胡须 -->
+  <g stroke="url(#bLine)" stroke-width="2.2" stroke-linecap="round" opacity=".6">
+    <path d="M45 77h-11"/><path d="M45 82l-10 4"/><path d="M83 77h11"/><path d="M83 82l10 4"/>
+  </g>
+</svg></div>
+    <div class="c-ico-prev"><svg class="sm" viewBox="0 0 128 128" aria-label="App 图标终稿 · 白底镂空小老鼠">
+  
+  <rect width="128" height="128" rx="28" fill="url(#bBg)"/>
+  <!-- 卷尾（描边镂空） -->
+  <path d="M89 101c13 5 21-6 16-15-3-6-11-8-16-3" fill="none" stroke="url(#bLine)" stroke-width="6.6" stroke-linecap="round"/>
+  <!-- 身体：内部全白（镂空） -->
+  <ellipse cx="64" cy="97" rx="25" ry="19" fill="#FFFFFF" stroke="url(#bLine)" stroke-width="7"/>
+  <!-- 双耳 -->
+  <circle cx="38" cy="45" r="25" fill="#FFFFFF" stroke="url(#bLine)" stroke-width="7"/>
+  <circle cx="90" cy="45" r="25" fill="#FFFFFF" stroke="url(#bLine)" stroke-width="7"/>
+  <circle cx="38" cy="45" r="10.5" fill="none" stroke="url(#bLine)" stroke-width="3.8"/>
+  <circle cx="90" cy="45" r="10.5" fill="none" stroke="url(#bLine)" stroke-width="3.8"/>
+  <!-- 圆脸：内部全白（镂空） -->
+  <ellipse cx="64" cy="60" rx="36" ry="33" fill="#FFFFFF" stroke="url(#bLine)" stroke-width="7"/>
+  <!-- 镂空吻部 -->
+  <ellipse cx="64" cy="76" rx="16" ry="10.5" fill="none" stroke="url(#bLine)" stroke-width="3.8"/>
+  <circle cx="64" cy="70" r="4" fill="#1E3A8A"/>
+  <path d="M60 78q4 4 8 0" fill="none" stroke="#1E3A8A" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- 眼睛 -->
+  <circle cx="48" cy="57" r="5.2" fill="#1E3A8A"/>
+  <circle cx="80" cy="57" r="5.2" fill="#1E3A8A"/>
+  <circle cx="46.4" cy="55.2" r="1.7" fill="#FFFFFF"/>
+  <circle cx="78.4" cy="55.2" r="1.7" fill="#FFFFFF"/>
+  <!-- 胡须 -->
+  <g stroke="url(#bLine)" stroke-width="2.2" stroke-linecap="round" opacity=".6">
+    <path d="M45 77h-11"/><path d="M45 82l-10 4"/><path d="M83 77h11"/><path d="M83 82l10 4"/>
+  </g>
+</svg></div>
+    <div class="c-stat" id="cStat"></div>
+  </div>
+</aside>
+
+<button class="orb" id="orb" aria-label="打开待办面板">
+  <span class="pring" id="orbRing"></span>
+  <span class="ering"></span>
+  <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 7.5l1.9 1.9L9.4 5.9"/>
+    <path d="M13.5 9.2h6.5"/>
+    <path d="M4 16.5l1.9 1.9 3.5-3.5"/>
+    <path d="M13.5 18.2h6.5"/>
+  </svg>
+  <span class="badge hide" id="badge">0</span>
+</button>
+
+<div class="coach" id="coach">
+  <b>单击球开合面板</b>
+  <span>点钉子钉住 · 拖动换位置</span>
+  <span class="arw" style="right:-5px;top:calc(50% - 5px);transform:rotate(-45deg)"></span>
+</div>
+
+<div class="rcard" id="rcard">
+  <span class="rc-bar"></span>
+  <div class="rc-body">
+    <div class="rc-title" id="rcTitle"></div>
+    <div class="rc-sub">
+      <span class="rc-remain" id="rcRemain"></span>
+      <span class="rc-more" id="rcMore"></span>
+    </div>
+    <div class="rc-acts">
+      <button class="rc-btn" id="rcOk">知道了</button>
+      <button class="rc-btn sec" id="rcDone">完成</button>
+    </div>
+  </div>
+</div>
+
+<section class="panel" id="panel">
+  <header class="p-head">
+    <div class="p-count" id="pCount"><b>0</b> 项待完成</div>
+    <div class="p-actions">
+      <button class="icon-btn" id="btnPin" title="钉住面板">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l-.7 5.2 3 2.8H6.7l3-2.8z"/><path d="M12 11v9"/></svg>
+      </button>
+      <button class="icon-btn" id="btnMore" title="更多">
+        <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="storage-warn" id="storageWarn">当前浏览器无法保存数据，本次操作仅存在于内存中。</div>
+
+  <div class="p-search">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+      <input id="search" type="text" placeholder="搜索待办…" autocomplete="off" spellcheck="false">
+      <button class="search-clear" id="searchClear">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <nav class="p-tabs" id="tabs"></nav>
+
+  <div class="p-list" id="list"></div>
+
+  <!-- 全部完成庆祝（V1.6 / FR-17.5）：当前视图内再无未完成项时出现，1.6s 自动淡出。
+       覆盖范围由 JS 按 .p-list 的真实几何对齐，不遮挡底部输入区；
+       pointer-events:none —— 庆祝期间输入、滚动、点击全部照常可用 -->
+  <div class="celebrate" id="celebrate" hidden>
+    <div class="cel-in">
+      <div class="cel-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path class="cel-tick" d="M5.4 12.6l4.3 4.3L18.6 7.5"/>
+        </svg>
+        <span class="cel-ring"></span>
+      </div>
+      <div class="cel-t" id="celTitle">今天的待办都清空了</div>
+      <div class="cel-s" id="celSub">好好休息一下</div>
+    </div>
+  </div>
+
+  <!-- 备注悬停提示：面板直接子元素，避免被 overflow 裁剪（BUG-1 同款教训） -->
+  <div class="note-tip" id="noteTip" style="display:none"></div>
+
+  <!-- 备注编辑器：面板直接子元素，定位基准与坐标计算一致 -->
+  <div class="note-pop" id="notePop" style="display:none">
+    <textarea id="npText" rows="3" maxlength="200" placeholder="备注：只有你自己能看到（限 200 字）"></textarea>
+    <div class="np-foot">
+      <span class="np-tip">Enter 保存 · Shift+Enter 换行</span>
+      <button class="np-clear" id="npClear">清除</button>
+      <button class="np-ok" id="npOk">保存</button>
+    </div>
+  </div>
+
+  <!-- 换分类下拉（V1.7 / FR-19）：面板直接子元素，定位基准与其它弹层一致 -->
+  <div class="move-pop" id="movePop"></div>
+
+  <div class="composer" id="composer">
+    <div class="composer-meta">
+      <button class="due-btn" id="dueBtn" title="设置截止时间">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>
+        <span id="dueBtnText">截止时间</span>
+      </button>
+      <select class="list-select" id="listSelect"></select>
+    </div>
+    <div class="input-row">
+      <span class="plus">+</span>
+      <input id="newTodo" type="text" placeholder="添加待办，回车设置截止时间" autocomplete="off" spellcheck="false">
+    </div>
+
+  </div>
+
+  <!-- 截止时间选择器：必须是 .panel 的直接子元素。
+       放 .composer 里会被 .panel{overflow:hidden} 裁掉，且定位基准会算错。 -->
+  <div class="due-pop" id="duePop">
+    <div class="dp-row" id="dpRow">
+      <button class="dp" data-preset="today18">今天 18:00</button>
+      <button class="dp" data-preset="tonight">今晚 23:59</button>
+      <button class="dp" data-preset="tom9">明天 09:00</button>
+      <button class="dp" data-preset="tom18">明天 18:00</button>
+      <button class="dp" data-preset="fri18">本周五 18:00</button>
+      <button class="dp" data-preset="d3">3 天后</button>
+    </div>
+    <div class="dp-sep"></div>
+    <div class="dp-custom">
+      <input type="date" id="dpDate">
+      <input type="time" id="dpTime">
+      <button class="dp-ok" id="dpOk">确定</button>
+    </div>
+    <!-- 新建流程中的备注输入（V1.7 / FR-20）：默认隐藏，仅 composePending 时显形 -->
+    <div class="dp-note" id="dpNoteWrap">
+      <input id="dpNote" type="text" maxlength="200" placeholder="备注（可选，只有自己可见）"
+             autocomplete="off" spellcheck="false">
+    </div>
+    <div class="dp-foot">
+      <span class="dp-tip" id="dpTip">只选日期时自动视为当天 23:59</span>
+      <button class="dp-clear" id="dpClear">清除</button>
+    </div>
+  </div>
+</section>
+
+<div class="menu" id="menu" style="top:0;left:0">
+  <button data-m="export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7.5 10.5L12 15l4.5-4.5"/><path d="M4 20h16"/></svg>导出为 JSON</button>
+  <button data-m="import"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M7.5 7.5L12 3l4.5 4.5"/><path d="M4 20h16"/></svg>从 JSON 导入</button>
+  <div class="sep"></div>
+  <button data-m="fold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>折叠 / 展开已完成</button>
+  <button data-m="ackall"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>确认全部待处理提醒</button>
+  <div class="sep"></div>
+  <button data-m="wipe" class="danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4.5h6V7"/><path d="M6.5 7l1 13h9l1-13"/></svg>清空全部数据</button>
+</div>
+
+<input type="file" id="fileInput" accept="application/json,.json" style="display:none">
+
+<div class="mask" id="mask">
+  <div class="modal">
+    <h4 id="mTitle">确认</h4>
+    <p id="mDesc"></p>
+    <div class="m-row">
+      <button class="m-btn" id="mCancel">取消</button>
+      <button class="m-btn primary" id="mOk">确定</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ==========================================================
+   「支点」V1.9.5 交互原型
+   渲染层 = 交互原型 + 应用模式适配层（单文件，零外部依赖）
+
+   V1.1：三色优先级 → 唯一序号绝对优先级
+         新增截止时间 + 紧迫度分区
+         新增 1天/1小时/10分钟 三级提醒 + 强制确认卡片
+
+   V1.2：BUG-1 截止时间选择器定位基准错误（在 .composer 内被面板裁掉），
+         已移到 .panel 直接子元素并按面板坐标夹取
+         CH-11「还有 N 条提醒等待处理」→「另有 N 条即将到期」
+         CH-12 提醒卡精简为「标题 + 剩余时间 + 两个出口」
+
+   V1.3：CH-13 标签系统整体移除（行内色点语义与优先级冲突）
+         CH-14 rank 由「清单内排名」升级为「全局唯一排名」，数据 v3
+         CH-15 全局 #1 在主分区整行底色突出（与逾期红底同一手法）
+         CH-16 新增备注：行悬停显示气泡，行内图标打开编辑器
+
+   V1.5：CH-20 提醒阈值降为单档「到期前 1 小时」（移除 24 小时 / 10 分钟两档）
+         CH-21 新增创建时刻守卫：提醒时刻早于创建时刻则不再补发
+               （治「刚建完就弹卡」）
+         CH-22 新建流程：回车 → 自动带出时间选择器（默认今晚 23:59）→ 回车创建
+         CH-23 行内对齐：面板 392→430，清单名 / 时间列改固定宽度列
+
+   V1.6：CH-26 完成控件由圆形改为圆角方形复选框（圆形会被读成「单选/选中」，
+               与「完成」语义不符）；悬停浮出半透明预览勾
+         CH-27 完成反馈由「两拍」扩为完整「完成序列」：方块填充弹出 → 勾描边画出
+               → 涟漪扩散 + 6 颗微粒迸发 → 删除线扫过 → 整行闪光 → 820ms 后沉底；
+               并新增「全部完成庆祝」：当前视图内再无未完成项时出现一次性庆祝层
+
+   V1.7：CH-32 清单 tab 支持拖动排序（「全部」固定首位、「+」固定末位）
+         CH-33 清单名常显且可点 → 下拉单选换分类（不再需要切回「全部」视图）
+         CH-34 新建流程：带出时间选择器的同时带出备注输入（默认空，回车即创建）
+         CH-35 完成序列收尾追加「勾飞入『已完成』区」+ 分隔栏脉冲
+   ========================================================== */
+
+var KEY = 'fushi.v1';
+var MIN = 60000, HOUR = 3600000, DAY = 86400000;
+var WEEK = ['周日','周一','周二','周三','周四','周五','周六'];
+
+/* 提醒阈值：V1.5 起只保留「到期前 1 小时」一档（FR-13.1）
+   原「24 小时」档在「截止时间就在今天」的条目上于创建瞬间即成立，
+   于是刚建完就弹卡 —— 该档已移除；10 分钟档一并移除（用户裁定：1 小时一次即可） */
+var THRESH = [
+  { key:'h1', ms: 60*MIN, label:'快到截止时间' }
+];
+
+var uidN = 1;
+function uid(p){ return p + '_' + Date.now().toString(36) + (uidN++).toString(36); }
+function p2(n){ return n < 10 ? '0' + n : '' + n; }
+function esc(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function startOfDay(ts){ var d = new Date(ts); d.setHours(0,0,0,0); return d.getTime(); }
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+function hhmm(ts){ var d = new Date(ts); return p2(d.getHours()) + ':' + p2(d.getMinutes()); }
+
+/* ---------------- 虚拟时钟（演示用时间加速） ---------------- */
+var vOff = 0, lastReal = Date.now(), timeScale = 1;
+function vnow(){ return Date.now() + vOff; }
+
+/* ---------------- 数据层 ---------------- */
+
+function seed(){
+  var now = Date.now();
+  var W='l_work', LF='l_life', SH='l_shop', IB='l_inbox';
+  function ack(o){ return o || {h1:null}; }
+  var doneAck = {h1:1};
+  return {
+    version: 3,
+    lists: [
+      {id:W,  name:'工作',  order:0, createdAt:now},
+      {id:LF, name:'生活',  order:1, createdAt:now},
+      {id:SH, name:'购物',  order:2, createdAt:now},
+      {id:IB, name:'收件箱', order:3, createdAt:now}
+    ],
+    todos: [
+      {id:'d_1', title:'整理下周评审会的材料', rank:1, dueAt: now + 2*HOUR + 10*MIN, note:'把上周遗留的两个议题也放进去，控制在 20 页内',
+       done:false, doneAt:null, listId:W, remindAck:ack(),
+       createdAt:now-2*DAY, updatedAt:now},
+      {id:'d_2', title:'回复财务的报销单', rank:2, dueAt: now - 2*HOUR, note:'张姐催了两次，附件里的差旅部分要先核',
+       done:false, doneAt:null, listId:W, remindAck:ack(),
+       createdAt:now-2*DAY, updatedAt:now},
+      {id:'d_3', title:'给李工回邮件确认接口字段', rank:3, dueAt: now + 8*MIN, note:'字段对齐以 v2.3 接口文档为准，抄送老周',
+       done:false, doneAt:null, listId:W, remindAck:ack(),
+       createdAt:now-2*DAY, updatedAt:now},
+      {id:'d_4', title:'把设计稿的间距统一成 8 的倍数', rank:4, dueAt: now + 5*HOUR, note:'',
+       done:false, doneAt:null, listId:W, remindAck:ack(),
+       createdAt:now-DAY, updatedAt:now},
+      {id:'d_5', title:'预约牙医复查', rank:5, dueAt: now + 26*HOUR, note:'上次医生说半年拍一次全景片',
+       done:false, doneAt:null, listId:LF, remindAck:ack(),
+       createdAt:now-20*HOUR, updatedAt:now},
+      {id:'d_6', title:'买滤芯 · 型号 BRITA Maxtra+', rank:6, dueAt: now + 3*DAY, note:'超市第二件半价，别买错型号',
+       done:false, doneAt:null, listId:SH, remindAck:ack(),
+       createdAt:now-5*HOUR, updatedAt:now},
+      {id:'d_7', title:'给植物换盆', rank:7, dueAt: null, note:'',
+       done:false, doneAt:null, listId:LF, remindAck:ack(),
+       createdAt:now-8*HOUR, updatedAt:now},
+      {id:'d_8', title:'确认周五场地押金到账', rank:null, dueAt: now - 3*HOUR, note:null,
+       done:true, doneAt:now-3*HOUR, listId:W, remindAck:doneAck,
+       createdAt:now-3*DAY, updatedAt:now},
+      {id:'d_9', title:'把旧显示器挂到二手平台', rank:null, dueAt: null, note:null,
+       done:true, doneAt:now-30*HOUR, listId:LF, remindAck:doneAck,
+       createdAt:now-4*DAY, updatedAt:now}
+    ],
+    ui: {
+      pinned:false, orbX:null, orbY:null,
+      listId:'all', doneCollapsed:false,
+      coachMarkSeen:false, timeScale:1
+    }
+  };
+}
+
+var storageOK = true;
+var db;
+
+/* V1.0 → V1.1 迁移：priority + order → rank（FR-10.3） */
+function migrateV1(d){
+  var hint = { high:0, medium:1, low:2 };
+  var byList = {};
+  (d.todos || []).forEach(function(t){
+    if(!t || typeof t !== 'object') return;
+    var l = t.listId || '_';
+    (byList[l] = byList[l] || []).push(t);
+  });
+  Object.keys(byList).forEach(function(k){
+    var arr = byList[k];
+    arr.sort(function(a,b){
+      var oa = (typeof a.order === 'number') ? a.order : 0;
+      var ob = (typeof b.order === 'number') ? b.order : 0;
+      if(oa !== ob) return oa - ob;
+      var pa = hint[a.priority] == null ? 1 : hint[a.priority];
+      var pb = hint[b.priority] == null ? 1 : hint[b.priority];
+      return pa - pb;
+    });
+    arr.forEach(function(t,i){
+      t.rank = t.done ? null : i + 1;
+      if(t.dueAt === undefined) t.dueAt = null;
+      if(!t.remindAck) t.remindAck = { h1:null };
+    });
+  });
+  d.version = 2;
+  return d;
+}
+
+/* V1.1/V1.2 (v2) → V1.3 (v3) 迁移：拆除标签 + 清单内排名 → 全局唯一排名（FR-06.0） */
+function migrateV2(d){
+  var order = {};
+  (d.lists || []).forEach(function(l){ order[l.id] = typeof l.order === 'number' ? l.order : 0; });
+  var undone = (d.todos || []).filter(function(t){ return t && !t.done; });
+  undone.sort(function(a,b){
+    var oa = order[a.listId] || 0, ob = order[b.listId] || 0;
+    if(oa !== ob) return oa - ob;
+    var ra = (typeof a.rank === 'number') ? a.rank : 99999;
+    var rb = (typeof b.rank === 'number') ? b.rank : 99999;
+    if(ra !== rb) return ra - rb;
+    return (a.createdAt || 0) - (b.createdAt || 0);
+  });
+  undone.forEach(function(t,i){ t.rank = i + 1; });
+  d.todos.forEach(function(t){
+    if(t.done) t.rank = null;
+    delete t.tagIds;
+    if(typeof t.note !== 'string') t.note = '';
+  });
+  delete d.tags;
+  if(d.ui){
+    delete d.ui.tagIds;
+    delete d.ui.tagbarOpen;
+  }
+  d.version = 3;
+  return d;
+}
+
+function normalize(d){
+  if(!d || typeof d !== 'object') return seed();
+  if(!Array.isArray(d.lists) || !Array.isArray(d.todos)) return seed();
+  if(d.version === 1) d = migrateV1(d);
+  if(d.version === 2) d = migrateV2(d);
+  if(d.version !== 3) d = migrateV2(d);
+
+  if(d.lists.length === 0){
+    d.lists = [{id:uid('l'), name:'收件箱', order:0, createdAt:Date.now()}];
+  }
+  var listIds = {};
+  d.lists.forEach(function(l,i){
+    if(!l.id) l.id = uid('l');
+    if(typeof l.name !== 'string' || !l.name) l.name = '未命名';
+    if(typeof l.order !== 'number') l.order = i;
+    listIds[l.id] = 1;
+  });
+  var fallback = d.lists[0].id;
+  d.todos = d.todos.filter(function(t){ return t && typeof t === 'object'; });
+  d.todos.forEach(function(t,i){
+    if(!t.id) t.id = uid('d');
+    if(typeof t.title !== 'string') t.title = String(t.title == null ? '' : t.title);
+    t.done = !!t.done;
+    if(!t.done) t.doneAt = null;
+    else if(!t.doneAt) t.doneAt = Date.now();
+    if(t.dueAt != null && (typeof t.dueAt !== 'number' || !isFinite(t.dueAt))) t.dueAt = null;
+    if(t.dueAt != null) t.dueAt = Math.round(t.dueAt / MIN) * MIN;
+    if(!listIds[t.listId]) t.listId = fallback;
+    if(typeof t.note !== 'string') t.note = '';
+    if(t.note.length > 200) t.note = t.note.slice(0, 200);
+    if(typeof t.createdAt !== 'number') t.createdAt = Date.now();
+    if(typeof t.updatedAt !== 'number') t.updatedAt = t.createdAt;
+    if(!t.remindAck || typeof t.remindAck !== 'object') t.remindAck = {};
+    if(t.remindAck.h1 === undefined) t.remindAck.h1 = null;
+    /* V1.5：24 小时 / 10 分钟两档已废弃，清理旧字段 */
+    delete t.remindAck.h24;
+    delete t.remindAck.m10;
+    if(t.rank !== null && typeof t.rank !== 'number') t.rank = i + 1;
+  });
+  if(!d.ui || typeof d.ui !== 'object') d.ui = {};
+  var u = d.ui;
+  u.pinned = !!u.pinned;
+  u.listId = u.listId || 'all';
+  u.doneCollapsed = !!u.doneCollapsed;
+  u.coachMarkSeen = !!u.coachMarkSeen;
+  u.timeScale = (u.timeScale === 60 || u.timeScale === 600) ? u.timeScale : 1;
+  d.version = 3;
+  normalizeRanks(d);
+  return d;
+}
+
+/* 序号归一化：全局未完成项连续编号 1..n（V1.3 起 rank 为全局唯一排名，PRD §5.4） */
+function normalizeRanks(target){
+  var d = target || db;
+  var arr = d.todos.filter(function(t){ return !t.done; });
+  arr.sort(function(a,b){
+    return (a.rank == null ? 99999 : a.rank) - (b.rank == null ? 99999 : b.rank);
+  });
+  arr.forEach(function(t,i){ t.rank = i + 1; });
+  d.todos.forEach(function(t){ if(t.done) t.rank = null; });
+}
+
+function load(){
+  try{
+    var raw = localStorage.getItem(KEY);
+    if(!raw) return seed();
+    return normalize(JSON.parse(raw));
+  }catch(e){
+    console.warn('[支点] 数据读取失败，回退为空数据', e);
+    return seed();
+  }
+}
+var storageWarned = false;
+function save(){
+  try{
+    localStorage.setItem(KEY, JSON.stringify(db));
+  }catch(e){
+    if(!storageWarned){
+      storageWarned = true; storageOK = false;
+      document.getElementById('storageWarn').classList.add('show');
+    }
+    console.warn('[支点] 数据保存失败', e);
+  }
+}
+
+/* ---------------- 查询工具 ---------------- */
+function byId(id){ for(var i=0;i<db.todos.length;i++){ if(db.todos[i].id===id) return db.todos[i]; } return null; }
+function listById(id){ for(var i=0;i<db.lists.length;i++){ if(db.lists[i].id===id) return db.lists[i]; } return null; }
+function sortedLists(){ return db.lists.slice().sort(function(a,b){ return a.order - b.order; }); }
+
+/* ---------------- 截止时间格式化（FR-12.6 / 12.7） ---------------- */
+function fmtSpan(ms){
+  if(ms < MIN) return '不到 1 分钟';
+  if(ms < HOUR) return Math.floor(ms / MIN) + ' 分钟';
+  if(ms < DAY){
+    var h = Math.floor(ms / HOUR), m = Math.floor((ms % HOUR) / MIN);
+    return m > 0 ? (h + ' 小时 ' + m + ' 分') : (h + ' 小时');
+  }
+  var d = Math.floor(ms / DAY), rh = Math.floor((ms % DAY) / HOUR);
+  return rh > 0 ? (d + ' 天 ' + rh + ' 小时') : (d + ' 天');
+}
+function fmtDueLabel(ts, now){
+  var d = new Date(ts), n = new Date(now);
+  var hm = p2(d.getHours()) + ':' + p2(d.getMinutes());
+  if(ts <= now) return '已逾期 ' + fmtSpan(now - ts);
+  var diff = Math.round((startOfDay(ts) - startOfDay(now)) / DAY);
+  if(diff === 0) return '今天 ' + hm;
+  if(diff === 1) return '明天 ' + hm;
+  if(diff > 1 && diff <= 6) return WEEK[d.getDay()] + ' ' + hm;
+  return (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + hm;
+}
+function dueLevel(ms){
+  if(ms <= 0) return 'overdue';
+  if(ms <= 10*MIN) return 'p10';
+  if(ms <= 60*MIN) return 'p1h';
+  if(ms <= 24*HOUR) return 'p1d';
+  return 'later';
+}
+function dueInfo(t, now){
+  if(t.dueAt == null) return null;
+  var ms = t.dueAt - now;
+  return { ms: ms, level: dueLevel(ms), label: fmtDueLabel(t.dueAt, now), remain: fmtSpan(ms) };
+}
+
+/* ---------------- DOM ---------------- */
+var elOrb = document.getElementById('orb');
+var elPanel = document.getElementById('panel');
+var elList = document.getElementById('list');
+var elTabs = document.getElementById('tabs');
+var elBadge = document.getElementById('badge');
+var elPCount = document.getElementById('pCount');
+var elSearch = document.getElementById('search');
+var elNew = document.getElementById('newTodo');
+var elComposer = document.getElementById('composer');
+var elListSelect = document.getElementById('listSelect');
+var elCoach = document.getElementById('coach');
+var elMenu = document.getElementById('menu');
+var elCard = document.getElementById('rcard');
+var elCelebrate = document.getElementById('celebrate');
+var elDuePop = document.getElementById('duePop');
+var elDueBtn = document.getElementById('dueBtn');
+var elScaleRow = document.getElementById('scaleRow');
+var elNoteTip = document.getElementById('noteTip');
+var elNotePop = document.getElementById('notePop');
+var elNpText = document.getElementById('npText');
+var elMovePop = document.getElementById('movePop');
+var elDpNoteWrap = document.getElementById('dpNoteWrap');
+var elDpNote = document.getElementById('dpNote');
+
+var state = { query:'' };
+var draft = { listId:null, dueAt:null };
+var dueTarget = { type:'draft' };
+var noteTargetId = null;
+
+/* ---------------- 悬浮球 ---------------- */
+function placeOrb(x, y, persist){
+  var w = 52, vw = window.innerWidth, vh = window.innerHeight, pad = 8;
+  x = clamp(x, pad, vw - w - pad);
+  y = clamp(y, 30, vh - w - pad);
+  elOrb.style.left = x + 'px';
+  elOrb.style.top = y + 'px';
+  if(persist !== false){ db.ui.orbX = x; db.ui.orbY = y; save(); }
+  placeCoach();
+  positionStack();
+}
+function initOrb(){
+  var w = 52;
+  var x = (typeof db.ui.orbX === 'number') ? db.ui.orbX : (window.innerWidth - 28 - w);
+  var y = (typeof db.ui.orbY === 'number') ? db.ui.orbY : (window.innerHeight - 84);
+  placeOrb(x, y, true);
+}
+
+var drag = { active:false, moved:false, sx:0, sy:0, ox:0, oy:0 };
+elOrb.addEventListener('pointerdown', function(e){
+  if(e.button !== 0) return;
+  drag.active = true; drag.moved = false;
+  drag.sx = e.clientX; drag.sy = e.clientY;
+  drag.ox = parseFloat(elOrb.style.left) || 0;
+  drag.oy = parseFloat(elOrb.style.top) || 0;
+  if(elOrb.setPointerCapture) elOrb.setPointerCapture(e.pointerId);
+});
+elOrb.addEventListener('pointermove', function(e){
+  if(!drag.active) return;
+  var dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+  if(!drag.moved && Math.abs(dx) + Math.abs(dy) < 5) return;
+  if(!drag.moved){ drag.moved = true; elOrb.classList.add('dragging'); closeMenus(); }
+  placeOrb(drag.ox + dx, drag.oy + dy, false);
+});
+function endDrag(){
+  if(!drag.active) return;
+  var moved = drag.moved;
+  drag.active = false;
+  elOrb.classList.remove('dragging');
+  if(moved) placeOrb(parseFloat(elOrb.style.left), parseFloat(elOrb.style.top), true);
+  else togglePanel();          /* V1.9.2：轻点只开合，不再顺带钉住 */
+}
+elOrb.addEventListener('pointerup', endDrag);
+elOrb.addEventListener('pointercancel', function(){ drag.active = false; elOrb.classList.remove('dragging'); });
+
+/* ---------------- 面板开合 + 堆叠定位 ---------------- */
+var isOpen = false, pinned = false, openTimer = null, closeTimer = null;
+
+function openPanel(){
+  clearTimeout(openTimer); openTimer = null;
+  clearTimeout(closeTimer); closeTimer = null;
+  if(isOpen) return;
+  isOpen = true;
+  elPanel.classList.add('open');
+  positionStack();
+  requestAnimationFrame(positionStack);
+}
+function closePanel(){
+  clearTimeout(openTimer); openTimer = null;
+  clearTimeout(closeTimer); closeTimer = null;
+  if(!isOpen) return;
+  isOpen = false;
+  elPanel.classList.remove('open');
+  closeMenus(); closeDuePop();
+  positionStack();
+}
+/* V1.9.2 / FR-27：开合与钉住解耦。
+   旧实现里「点球」和「点钉子」都调 togglePin —— 于是点开面板 = 钉住，且 pinned 被写进
+   localStorage，重启后依旧钉着（用户报障：进详情页默认钉住、移出不收）。
+   新语义：
+     · 点球 togglePanel() —— 只管开/合，不碰 pinned；已钉住时点球＝暂时收起，钉住不变
+     · 点钉子 togglePin() —— 只管钉住；钉住即展开；取消钉住不立即收（交给移出即收）
+     · pinned 不持久化 —— 每次启动都是未钉住（FR-27.4） */
+function togglePanel(){
+  if(isOpen) closePanel(); else openPanel();
+}
+function togglePin(){
+  pinned = !pinned;
+  elOrb.classList.toggle('pinned', pinned);
+  document.getElementById('btnPin').classList.toggle('on', pinned);
+  if(pinned){
+    openPanel();
+    var r = document.getElementById('orbRing');
+    r.style.animation = 'none'; void r.offsetWidth;
+    r.style.animation = 'pulseRing .5s ease-out';
+    toast('已钉住 · 面板常驻');
+  } else {
+    /* 不立即收：用户手还停在面板上（刚点的钉子），移出时由 mouseleave 接管 */
+    toast('已取消钉住 · 移出即收');
+  }
+}
+
+/* 面板与提醒卡片垂直堆叠，整体相对悬浮球居中（FR-02.7） */
+function positionStack(){
+  var o = elOrb.getBoundingClientRect();
+  var vw = window.innerWidth, vh = window.innerHeight, gap = 12;
+  var pw = 430;
+  var panelH = isOpen ? (elPanel.offsetHeight || 420) : 0;
+  var cardH = cardVisible ? (elCard.offsetHeight || 150) : 0;
+
+  var toRight = (o.left + o.width/2) < vw/2;
+  var left = toRight ? (o.right + gap) : (o.left - gap - pw);
+  left = clamp(left, 12, vw - pw - 12);
+  elPanel.style.left = left + 'px';
+  elPanel.style.transformOrigin = toRight ? 'left center' : 'right center';
+  var cardLeft = toRight ? (o.right + gap) : (o.left - gap - 268);
+  elCard.style.left = clamp(cardLeft, 12, vw - 280) + 'px';
+  elCard.style.transformOrigin = toRight ? 'left center' : 'right center';
+
+  var stackH = panelH + (panelH && cardH ? gap : 0) + cardH;
+  if(stackH > vh - 48){
+    /* V1.9.1 / FR-25.3：面板高于视口时钳制区间会倒挂（lo>hi），旧 clamp 会返回下限 36
+       导致面板底越出窗口 —— hi 兜底不低于 8，lo 不得超过 hi */
+    var hi = Math.max(8, vh - panelH - 12);
+    elPanel.style.top = clamp(o.top + o.height/2 - panelH/2, Math.min(36, hi), hi) + 'px';
+    elCard.style.top = (vh - cardH - 14) + 'px';
+    return;
+  }
+  var top = clamp(o.top + o.height/2 - stackH/2, 36, vh - stackH - 12);
+  elPanel.style.top = top + 'px';
+  elCard.style.top = (top + panelH + (panelH && cardH ? gap : 0)) + 'px';
+}
+
+/* V1.9.1 / FR-25.2：面板高度一变就重新定位 —— 展开输入区、列表增减、切视图等一切高度变化。
+   旧实现只在开/关面板时定位一次：全部视图展开输入区后面板 +34px，底部直接越出窗口下沿
+   （真实内核实测：输入框可见 19/28px，输入区越界 21px）。
+   策略：底沿贴住窗口下沿时向上生长（输入框原地不动，符合直觉）；否则不动（避免无谓跳动）。
+   提醒卡跟住面板新底沿。jsdom 无 ResizeObserver —— 必须判空。 */
+if(typeof ResizeObserver !== 'undefined'){
+  new ResizeObserver(function(){
+    if(!isOpen) return;
+    var vh2 = window.innerHeight;
+    var h2 = elPanel.offsetHeight;
+    var top2 = parseFloat(elPanel.style.top) || 0;
+    var over2 = top2 + h2 - (vh2 - 12);
+    if(over2 > 0){
+      top2 = Math.max(8, top2 - over2);
+      elPanel.style.top = top2 + 'px';
+    }
+    if(cardVisible){
+      elCard.style.top = (top2 + h2 + 12) + 'px';
+    }
+  }).observe(elPanel);
+}
+function placeCoach(){
+  if(!elCoach.classList.contains('show')) return;
+  var o = elOrb.getBoundingClientRect();
+  elCoach.style.top = Math.max(40, o.top + o.height/2 - elCoach.offsetHeight/2) + 'px';
+  /* 球贴左缘时翻到球右侧，避免引导层盖住球导致无法悬停/点击；引导层本身不拦截指针 */
+  var flip = o.left - elCoach.offsetWidth - 16 < 16;
+  elCoach.classList.toggle('flip', flip);
+  var cx = flip ? o.right + 16 : o.left - elCoach.offsetWidth - 16;
+  elCoach.style.left = Math.min(Math.max(cx, 8), Math.max(8, window.innerWidth - elCoach.offsetWidth - 8)) + 'px';
+}
+
+/* 悬停 hit-test：球体 / 面板 / 提醒卡片
+   CH-37：① 收起宽限 320ms → 120ms（「脱离即刻收起」又不闪）；
+          ② 命中区外扩 8px，覆盖球与面板之间 12px 的缝隙，穿越时不误关；
+          ③ 指针移出页面时 mousemove 不再触发（面板会一直挂着），用 mouseleave 兜底立即收起 */
+var HOVER_PAD = 8, CLOSE_GRACE = 120;
+document.addEventListener('mousemove', function(e){
+  if(drag.active || pinned) return;
+  var x = e.clientX, y = e.clientY;
+  function inside(el){
+    var r = el.getBoundingClientRect();
+    return x >= r.left - HOVER_PAD && x <= r.right + HOVER_PAD &&
+           y >= r.top - HOVER_PAD && y <= r.bottom + HOVER_PAD;
+  }
+  var hit = inside(elOrb) || (isOpen && inside(elPanel)) || (cardVisible && inside(elCard));
+  if(hit){
+    clearTimeout(closeTimer); closeTimer = null;
+    if(!isOpen && !openTimer) openTimer = setTimeout(openPanel, 140);
+  } else {
+    clearTimeout(openTimer); openTimer = null;
+    if(isOpen && !closeTimer) closeTimer = setTimeout(closePanel, CLOSE_GRACE);
+  }
+}, { passive:true });
+document.addEventListener('mouseleave', function(){
+  clearTimeout(openTimer); openTimer = null;
+  clearTimeout(closeTimer); closeTimer = null;
+  if(isOpen && !pinned) closePanel();
+});
+
+function closeMenus(){
+  elMenu.classList.remove('open');
+  var arr = document.querySelectorAll('.menu.tmp');
+  for(var i=0;i<arr.length;i++) arr[i].remove();
+}
+
+/* ---------------- 可见数据与排序（PRD §5.3） ---------------- */
+function visible(){
+  var now = vnow();
+  var q = state.query.trim().toLowerCase();
+  var arr = db.todos.filter(function(t){
+    if(db.ui.listId !== 'all' && t.listId !== db.ui.listId) return false;
+    if(q && t.title.toLowerCase().indexOf(q) < 0) return false;
+    return true;
+  });
+  var undone = arr.filter(function(t){ return !t.done; });
+  var done = arr.filter(function(t){ return t.done; })
+                .sort(function(a,b){ return (b.doneAt||0) - (a.doneAt||0); });
+  var overdue = [], soon = [], main = [];
+  function byRank(a,b){
+    return (a.rank == null ? 99999 : a.rank) - (b.rank == null ? 99999 : b.rank);
+  }
+
+  undone.forEach(function(t){
+    var di = dueInfo(t, now);
+    if(di && di.level === 'overdue') overdue.push(t);
+    else if(di && di.level === 'p10') soon.push(t);
+    else main.push(t);
+  });
+  /* 各分区内部一律按全局绝对优先级（rank）排序 —— 分区只回答「有多急」，rank 回答「先做哪个」 */
+  main.sort(byRank);
+  overdue.sort(byRank);
+  soon.sort(byRank);
+  return { overdue:overdue, soon:soon, main:main, done:done, all:arr, now:now };
+}
+
+/* ---------------- 渲染 ---------------- */
+function renderAll(){
+  renderTabs();
+  renderList(false);
+  renderComposer();
+  renderCount();
+  positionStack();
+}
+
+function renderCount(){
+  var now = vnow();
+  var undone = db.todos.filter(function(t){ return !t.done; });
+  var n = undone.length, urgent = 0;
+  undone.forEach(function(t){
+    var di = dueInfo(t, now);
+    if(di && (di.level === 'overdue' || di.level === 'p10')) urgent++;
+  });
+  elPCount.innerHTML = '<b>' + n + '</b> 项待完成' +
+    (urgent ? ' · <span class="warn">' + urgent + ' 项紧迫</span>' : '');
+
+  if(n === 0) elBadge.classList.add('hide');
+  else { elBadge.classList.remove('hide'); elBadge.textContent = n > 99 ? '99+' : String(n); }
+
+  elOrb.classList.toggle('urgent', urgent > 0);
+
+  var c = document.getElementById('cStat');
+  if(c){
+    c.innerHTML =
+      '清单 <b>' + db.lists.length + '</b> · 待办 <b>' + db.todos.length + '</b> · 未完成 <b>' + n + '</b><br>' +
+      '紧迫 <b>' + urgent + '</b> 项 · 提醒队列 <b>' + queue.length + '</b> 条<br>' +
+      '虚拟时间 <b>' + hhmm(vnow()) + '</b> · 倍率 <b>' + timeScale + '×</b><br>' +
+      '存储：<b>' + (storageOK ? 'localStorage' : '内存模式') + '</b>';
+  }
+  syncTabCounts();      /* V1.9.2 / FR-26：任何数据变更都会经过 renderCount，在此统一同步 Tab 数字 */
+}
+
+/* V1.9.2 / FR-26：Tab 计数实时同步 —— 只改 .cnt 文本，不重建 Tab DOM。
+   旧实现只有 renderTabs() 会算计数，而「完成 / 恢复 / 删除 / 新建」走的是
+   renderList + renderCount，于是 Tab 上的数字停在旧值（用户报障：完成后数字不动）。
+   放在 renderCount 里统一触发，可覆盖全部数据变更点；不重建 DOM 也不会打断 Tab 的
+   hover / 拖动状态（重建会把 tabDrag 持有的节点引用变成野指针）。 */
+function syncTabCounts(){
+  if(!elTabs) return;
+  var allCount = db.todos.filter(function(t){ return !t.done; }).length;
+  elTabs.querySelectorAll('.tab[data-list]').forEach(function(tab){
+    var id = tab.dataset.list;
+    var n = id === 'all' ? allCount
+          : db.todos.filter(function(t){ return !t.done && t.listId === id; }).length;
+    var cnt = tab.querySelector('.cnt');
+    if(n > 0){
+      if(!cnt){
+        cnt = document.createElement('span');
+        cnt.className = 'cnt';
+        tab.appendChild(cnt);
+      }
+      if(cnt.textContent !== String(n)) cnt.textContent = n;
+    } else if(cnt){
+      cnt.remove();          /* 归零就摘掉，不留「0」的视觉噪音 */
+    }
+  });
+}
+
+function renderTabs(){
+  var html = '';
+  var allCount = db.todos.filter(function(t){ return !t.done; }).length;
+  html += '<button class="tab' + (db.ui.listId==='all' ? ' active':'') + '" data-list="all">全部' +
+    (allCount ? '<span class="cnt">' + allCount + '</span>' : '') + '</button>';
+  sortedLists().forEach(function(l){
+    var c = db.todos.filter(function(t){ return !t.done && t.listId === l.id; }).length;
+    html += '<button class="tab' + (db.ui.listId===l.id ? ' active':'') + '" data-list="' + l.id + '">' +
+      esc(l.name) + (c ? '<span class="cnt">' + c + '</span>' : '') + '</button>';
+  });
+  html += '<button class="tab-add" id="tabAdd" title="新建清单">' +
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>';
+  elTabs.innerHTML = html;
+
+  elTabs.querySelectorAll('.tab').forEach(function(tab){
+    tab.addEventListener('click', function(){
+      /* 拖动排序刚结束的那一次 click 不当作「切换清单」（FR-18.4） */
+      if(tabSuppressClick){ tabSuppressClick = false; return; }
+      db.ui.listId = tab.dataset.list; save(); renderAll();
+    });
+    tab.addEventListener('dblclick', function(){ if(tab.dataset.list !== 'all') inlineRenameList(tab); });
+    tab.addEventListener('contextmenu', function(e){
+      if(tab.dataset.list === 'all') return;
+      e.preventDefault(); listContextMenu(e, tab.dataset.list);
+    });
+  });
+  document.getElementById('tabAdd').addEventListener('click', inlineAddList);
+  bindTabDrag();
+}
+
+/* ---------------- 清单拖动排序（V1.7 / FR-18） ----------------
+   指针方案而非 HTML5 DnD：拖动过程中要实时重排 DOM，DnD 会在重渲染后丢失拖拽源。
+   阈值 4px —— 低于阈值一律当点击，因此原有「点击切换 / 双击重命名 / 右键菜单」全部不受影响。
+   让位用 FLIP：改序前量位置、改序后按差值反向位移再归零，得到连续位移而不是跳变。 */
+var tabDrag = null;             /* {id, el, x, y, active} */
+var tabSuppressClick = false;   /* 拖动收尾时吃掉紧随其后的那一次 click */
+
+function movableTabs(){
+  return Array.prototype.slice.call(elTabs.querySelectorAll('.tab[data-list]'))
+    .filter(function(t){ return t.dataset.list !== 'all'; });
+}
+function tabRectsOf(arr){
+  return arr.map(function(t){ return { el:t, left:t.getBoundingClientRect().left }; });
+}
+function flipsTabs(before){
+  var after = tabRectsOf(before.map(function(b){ return b.el; }));
+  before.forEach(function(b, i){
+    var a = after[i];
+    if(!a || !a.el.animate) return;
+    var dx = b.left - a.left;
+    if(Math.abs(dx) < .5) return;
+    a.el.animate([{ transform:'translateX(' + dx + 'px)' }, { transform:'none' }],
+      { duration:170, easing:'cubic-bezier(.32,.72,0,1)' });
+  });
+}
+/* 把 DOM 当前顺序写回 db.lists[].order —— 顺序的真值只有一份，就是 DOM */
+function commitTabOrder(){
+  movableTabs().forEach(function(t, i){
+    var l = listById(t.dataset.list);
+    if(l) l.order = i;
+  });
+  db.lists.sort(function(a, b){ return a.order - b.order; });
+  db.lists.forEach(function(l, i){ l.order = i; });
+  save();
+}
+function bindTabDrag(){
+  movableTabs().forEach(function(tab){
+    tab.addEventListener('pointerdown', function(e){
+      if(e.button != null && e.button !== 0) return;       /* 只认左键 */
+      tabSuppressClick = false;
+      tabDrag = { id: tab.dataset.list, el: tab, x: e.clientX, y: e.clientY, active: false };
+    });
+  });
+}
+function onTabPointerMove(e){
+  if(!tabDrag) return;
+  if(!tabDrag.active){
+    if(Math.abs(e.clientX - tabDrag.x) < 4 && Math.abs(e.clientY - tabDrag.y) < 4) return;
+    tabDrag.active = true;
+    tabDrag.el.classList.add('tab-drag');
+    elTabs.classList.add('dragging');
+  }
+  var tr = elTabs.getBoundingClientRect();
+  /* 贴近左右边缘时自动滚动，清单多到超出一屏也能拖到任意位置 */
+  if(e.clientX < tr.left + 18) elTabs.scrollLeft -= 9;
+  else if(e.clientX > tr.right - 18) elTabs.scrollLeft += 9;
+
+  var arr = movableTabs();
+  if(arr.indexOf(tabDrag.el) < 0) return;
+  var others = arr.filter(function(t){ return t !== tabDrag.el; });
+  var want = others.slice();
+  var at = others.length;
+  for(var i = 0; i < others.length; i++){
+    var r = others[i].getBoundingClientRect();
+    if(e.clientX < r.left + r.width / 2){ at = i; break; }
+  }
+  want.splice(at, 0, tabDrag.el);
+  /* 顺序没变就不动 DOM，避免每帧重排 */
+  var same = want.every(function(t, i){ return t === arr[i]; });
+  if(same) return;
+  var before = tabRectsOf(others);
+  var next = want[want.indexOf(tabDrag.el) + 1] || document.getElementById('tabAdd');
+  elTabs.insertBefore(tabDrag.el, next);
+  flipsTabs(before);
+}
+function onTabPointerUp(){
+  if(!tabDrag) return;
+  var active = tabDrag.active, el = tabDrag.el;
+  if(el) el.classList.remove('tab-drag');
+  elTabs.classList.remove('dragging');
+  tabDrag = null;
+  if(!active) return;                                        /* 没超过阈值：交给 click 处理 */
+  commitTabOrder();
+  tabSuppressClick = true;
+  renderTabs();
+  toast('清单顺序已更新');
+}
+document.addEventListener('pointermove', onTabPointerMove);
+document.addEventListener('pointerup', onTabPointerUp);
+document.addEventListener('pointercancel', onTabPointerUp);
+
+function inlineAddList(){
+  if(elTabs.querySelector('.tab-input')) return;
+  var input = document.createElement('input');
+  input.className = 'tab-input'; input.placeholder = '清单名';
+  elTabs.appendChild(input); input.focus();
+  var committed = false;
+  function commit(){
+    if(committed) return; committed = true;
+    var name = input.value.trim();
+    input.remove();
+    if(!name) return;
+    var names = db.lists.map(function(l){ return l.name; });
+    var base = name, k = 2;
+    while(names.indexOf(name) >= 0){ name = base + ' ' + k; k++; }
+    var id = uid('l');
+    db.lists.push({ id:id, name:name, order: db.lists.length, createdAt: Date.now() });
+    db.ui.listId = id;
+    save(); renderAll();
+    toast('已创建清单「' + name + '」');
+  }
+  input.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); commit(); }
+    if(e.key === 'Escape'){ committed = true; input.remove(); }
+  });
+  input.addEventListener('blur', commit);
+  elTabs.scrollLeft = elTabs.scrollWidth;
+}
+
+function inlineRenameList(tab){
+  var id = tab.dataset.list;
+  var l = listById(id); if(!l) return;
+  var input = document.createElement('input');
+  input.className = 'tab-input'; input.value = l.name;
+  tab.replaceWith(input);
+  input.focus(); input.select();
+  var done = false;
+  function finish(saveIt){
+    if(done) return; done = true;
+    if(saveIt){
+      var v = input.value.trim();
+      if(v){ l.name = v; save(); }
+    }
+    renderAll();
+  }
+  input.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); finish(true); }
+    if(e.key === 'Escape') finish(false);
+  });
+  input.addEventListener('blur', function(){ finish(true); });
+}
+
+function listContextMenu(e, id){
+  closeMenus();
+  var l = listById(id); if(!l) return;
+  var m = document.createElement('div');
+  m.className = 'menu tmp open';
+  m.style.position = 'fixed';
+  m.style.left = Math.min(e.clientX, window.innerWidth - 188) + 'px';
+  m.style.top = Math.min(e.clientY, window.innerHeight - 96) + 'px';
+  m.style.transformOrigin = 'top left';
+  m.innerHTML = '<button data-a="rename">重命名清单</button><div class="sep"></div>' +
+                '<button data-a="del" class="danger">删除清单及其待办</button>';
+  document.body.appendChild(m);
+  m.addEventListener('click', function(ev){
+    var b = ev.target.closest('button'); if(!b) return;
+    var a = b.dataset.a;
+    closeMenus();
+    if(a === 'rename'){
+      var tabEl = elTabs.querySelector('.tab[data-list="' + id + '"]');
+      if(tabEl) inlineRenameList(tabEl);
+    } else {
+      var cnt = db.todos.filter(function(t){ return t.listId === id; }).length;
+      askConfirm('删除清单「' + l.name + '」？',
+        '该清单下的 ' + cnt + ' 条待办将一并删除，此操作不可撤销。', '删除', true).then(function(ok){
+        if(!ok) return;
+        db.todos = db.todos.filter(function(t){ return t.listId !== id; });
+        db.lists = db.lists.filter(function(x){ return x.id !== id; });
+        db.lists.forEach(function(x,i){ x.order = i; });
+        if(db.lists.length === 0){
+          var nid = uid('l');
+          db.lists.push({id:nid, name:'收件箱', order:0, createdAt:Date.now()});
+          db.ui.listId = 'all';
+        } else if(db.ui.listId === id){
+          db.ui.listId = 'all';
+        }
+        normalizeRanks(); save(); renderAll(); scanReminders();
+        toast('清单已删除');
+      });
+    }
+  });
+  setTimeout(function(){
+    document.addEventListener('pointerdown', function h(ev){
+      if(!m.contains(ev.target)){ m.remove(); document.removeEventListener('pointerdown', h); }
+    });
+  }, 0);
+}
+
+function rankClass(r){
+  if(r === 1) return 'rank r1';
+  if(r === 2 || r === 3) return 'rank r2';
+  return 'rank';
+}
+function dueButtonHTML(t, now, isDone){
+  if(isDone) return '';
+  var di = dueInfo(t, now);
+  if(!di) return '<span class="due-w"><button class="due ghost" data-act="due" title="设置截止时间">＋ 时间</button></span>';
+  var inner = (di.level === 'p10' ? '<span class="dotbreath"></span>' : '') + esc(di.label);
+  return '<span class="due-w"><button class="due lv-' + di.level + '" data-act="due" data-lab="' + esc(di.label) +
+    '" title="截止：' + esc(di.label) + '（点击修改）">' + inner + '</button></span>';
+}
+var IC_NOTE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M5 6.5h14M5 12h14M5 17.5h8"/></svg>';
+var IC_DEL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+var IC_RESTORE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h13"/><path d="M13 7.5L17.5 12 13 16.5"/></svg>';
+
+function todoHTML(t, view, now, zone){
+  var isDone = !!t.done;
+  var cls = 'todo' + (isDone ? ' done' : '');
+  if(!isDone && t.rank === 1 && zone === 'main') cls += ' top1';
+  var h = '<div class="' + cls + '" data-flip="' + t.id + '" data-id="' + t.id + '"' +
+          (isDone ? '' : ' draggable="true"') + '>';
+  if(isDone) h += '<span class="rank none"></span>';
+  else h += '<span class="' + rankClass(t.rank) + '" title="优先级 #' + (t.rank == null ? '—' : t.rank) + '">' +
+            (t.rank == null ? '' : t.rank) + '</span>';
+  /* 完成控件（V1.6 / CH-26）：圆角方形复选框 + 描边勾。
+     role=checkbox 让读屏软件播报「复选框 已勾选」，而不是「按钮」 */
+  h += '<button class="check" data-act="toggle" role="checkbox" aria-checked="' + (isDone ? 'true' : 'false') +
+       '" title="' + (isDone ? '恢复为未完成' : '标记完成') + '">' +
+       '<span class="box"></span>' +
+       '<svg class="tick" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 12.6l4.2 4.2L18.6 7.6"/></svg>' +
+       '</button>';
+  h += '<span class="title" title="' + esc(t.title) + '">' + esc(t.title) + '</span>';
+  /* 清单名（V1.7 / FR-19）：一律常显且可点 —— 换分类不必先切回「全部」视图。
+     已完成行不显示：已完成项不参与换分类，省下这一列也让沉底区更安静。
+     内层 span 承担省略号，列宽仍是 54px，因此列对齐与 V1.5 一致 */
+  if(!isDone){
+    var l = listById(t.listId);
+    if(l) h += '<button class="lm" data-act="move" title="属于「' + esc(l.name) + '」，点击更换清单">' +
+               '<span>' + esc(l.name) + '</span></button>';
+  }
+  h += dueButtonHTML(t, now, isDone);
+  if(t.note){
+    h += '<button class="note-ic" data-act="note" title="备注（点击编辑）">' + IC_NOTE + '</button>';
+  } else if(!isDone){
+    h += '<button class="row-btn note-add" data-act="note" title="添加备注">' + IC_NOTE + '</button>';
+  }
+  if(isDone){
+    h += '<button class="row-btn" data-act="restore" title="恢复">' + IC_RESTORE + '</button>';
+  }
+  h += '<button class="row-btn del" data-act="del" title="删除">' + IC_DEL + '</button>';
+  h += '</div>';
+  return h;
+}
+function emptyHTML(kind){
+  var ic = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5.5h11M8 12h11M8 18.5h11"/><circle cx="4.6" cy="5.5" r="1.3"/><circle cx="4.6" cy="12" r="1.3"/><circle cx="4.6" cy="18.5" r="1.3"/></svg>';
+  if(kind === 'search'){
+    return '<div class="empty">' + ic + '<div class="e-t">没有匹配的待办</div>' +
+      '<div class="e-s">试试换个关键词，或清除筛选条件</div>' +
+      '<button class="e-b" id="clearFilter">清除筛选</button></div>';
+  }
+  if(kind === 'list'){
+    return '<div class="empty">' + ic + '<div class="e-t">这个清单还是空的</div>' +
+      '<div class="e-s">在下方输入框敲一条，回车即可</div>' +
+      '<button class="e-b" id="goAll">看看全部</button></div>';
+  }
+  return '<div class="empty">' + ic + '<div class="e-t">今天还没有待办</div>' +
+    '<div class="e-s">点击下方输入框，回车开始记录</div></div>';
+}
+
+function zoneSig(v){
+  return v.overdue.map(function(t){ return t.id; }).join(',') + '|' +
+         v.soon.map(function(t){ return t.id; }).join(',') + '|' + v.done.length;
+}
+
+function renderList(animate){
+  var prev = {};
+  if(animate){
+    elList.querySelectorAll('[data-flip]').forEach(function(el){
+      prev[el.dataset.flip] = el.getBoundingClientRect();
+    });
+  }
+  var v = visible();
+  var now = v.now;
+  var view = db.ui.listId === 'all' ? 'all' : 'list';
+  var total = v.overdue.length + v.soon.length + v.main.length;
+  var html = '';
+
+  if(total === 0 && v.done.length === 0){
+    var kind = 'empty';
+    if(state.query.trim()) kind = 'search';
+    else if(db.ui.listId !== 'all') kind = 'list';
+    html = emptyHTML(kind);
+  } else {
+    if(v.overdue.length){
+      html += '<div class="zone zone-overdue"><div class="zone-h">已逾期 · ' + v.overdue.length + '</div>';
+      v.overdue.forEach(function(t){ html += todoHTML(t, view, now, 'overdue'); });
+      html += '</div>';
+    }
+    if(v.soon.length){
+      html += '<div class="zone zone-soon"><div class="zone-h">即将到期 · ' + v.soon.length + '</div>';
+      v.soon.forEach(function(t){ html += todoHTML(t, view, now, 'soon'); });
+      html += '</div>';
+    }
+    if(v.main.length){
+      v.main.forEach(function(t){ html += todoHTML(t, view, now, 'main'); });
+    } else if(total === 0){
+      html += '<div class="empty" style="padding:26px 20px 20px"><div class="e-t">当前视图没有未完成的待办</div><div class="e-s">好好休息一下</div></div>';
+    }
+    if(v.done.length){
+      html += '<div class="done-sep">' +
+        '<button class="lbl' + (db.ui.doneCollapsed ? ' folded':'') + '" id="foldDone">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>' +
+        '已完成 · ' + v.done.length + '</button>' +
+        '<button class="clr" id="clearDone">清空</button></div>';
+      if(!db.ui.doneCollapsed){
+        v.done.forEach(function(t){ html += todoHTML(t, view, now, 'done'); });
+      }
+    }
+  }
+
+  elList.innerHTML = html;
+  bindListEvents();
+  lastZoneSig = zoneSig(v);
+
+  if(animate){
+    elList.querySelectorAll('[data-flip]').forEach(function(el){
+      var p = prev[el.dataset.flip];
+      if(!p) return;
+      var n = el.getBoundingClientRect();
+      var dx = p.left - n.left, dy = p.top - n.top;
+      if(Math.abs(dx) < .5 && Math.abs(dy) < .5) return;
+      if(el.animate){
+        el.animate([{ transform:'translate(' + dx + 'px,' + dy + 'px)' }, { transform:'none' }],
+          { duration: 260, easing: 'cubic-bezier(.32,.72,0,1)' });
+      }
+    });
+  }
+  refreshCardDynamic();
+  positionStack();
+}
+
+function bindListEvents(){
+  elList.querySelectorAll('.todo').forEach(function(el){
+    var id = el.dataset.id;
+    el.addEventListener('click', function(e){
+      var act = e.target.closest('[data-act]');
+      if(!act) return;
+      var a = act.dataset.act;
+      if(a === 'toggle' || a === 'restore') toggleTodo(id, el);
+      else if(a === 'del') removeTodo(id, el);
+      else if(a === 'due') openDuePop({ type:'todo', id:id }, act);
+      else if(a === 'note') openNotePop(id, act);
+      else if(a === 'move'){
+        /* 再点一次同一个清单名即收起，避免「点了没反应」的错觉 */
+        if(elMovePop.classList.contains('show') && moveTargetId === id) closeMovePop();
+        else openMovePop(id, act);
+      }
+    });
+    el.addEventListener('dblclick', function(e){
+      if(e.target.closest('[data-act]')) return;
+      startEdit(el, id);
+    });
+    el.addEventListener('dragstart', function(e){
+      if(el.classList.contains('done')){ e.preventDefault(); return; }
+      dragId = id;
+      if(e.dataTransfer){
+        e.dataTransfer.effectAllowed = 'move';
+        try{ e.dataTransfer.setData('text/plain', id); }catch(err){}
+      }
+      el.classList.add('dragging');
+    });
+    el.addEventListener('dragend', function(){
+      el.classList.remove('dragging'); clearDropMarks(); dragId = null;
+    });
+  });
+
+  var fd = elList.querySelector('#foldDone');
+  if(fd) fd.addEventListener('click', function(){
+    db.ui.doneCollapsed = !db.ui.doneCollapsed; save(); renderList(false); positionStack();
+  });
+  /* V1.9.3 / FR-28：一键清空已完成 —— 复用 askConfirm 弹窗（与「清空全部数据」同一防误触层级），
+     范围=全部分类，不做撤销（用户拍板）。执行前把完成动效的未收尾状态一并清干净：
+     pendingDone 计时器（含 fxBusy 计数回退）、未落地的飞勾、庆祝层判定残留。 */
+  var cd = elList.querySelector('#clearDone');
+  if(cd) cd.addEventListener('click', function(){
+    var n = db.todos.filter(function(t){ return t.done; }).length;
+    if(!n) return;
+    askConfirm('清空已完成？', '共 ' + n + ' 条已完成待办会被删除，且无法恢复。', '清空 ' + n + ' 条', true)
+      .then(function(ok){
+        if(!ok) return;
+        db.todos.forEach(function(t){
+          if(!t.done) return;
+          if(pendingDone[t.id]){ clearTimeout(pendingDone[t.id]); delete pendingDone[t.id];
+            fxBusy = Math.max(0, fxBusy - 1); }
+          flyTickCancel(t);
+          delete pendingFly[t.id];
+          delete forced[t.id];
+        });
+        db.todos = db.todos.filter(function(t){ return !t.done; });
+        normalizeRanks(); save();
+        renderList(true); renderCount(); positionStack(); scanReminders();
+        toast('已清空 ' + n + ' 条已完成');
+      });
+  });
+  var cf = elList.querySelector('#clearFilter');
+  if(cf) cf.addEventListener('click', function(){
+    state.query = ''; elSearch.value = '';
+    document.getElementById('searchClear').classList.remove('show');
+    db.ui.listId = 'all'; save(); renderAll();
+  });
+  var ga = elList.querySelector('#goAll');
+  if(ga) ga.addEventListener('click', function(){ db.ui.listId = 'all'; save(); renderAll(); });
+}
+
+/* 每秒轻量刷新时间文字（不整体重渲染） */
+function refreshDueLabels(){
+  if(!isOpen) return;
+  var now = vnow();
+  elList.querySelectorAll('.todo[data-id]').forEach(function(el){
+    var t = byId(el.dataset.id);
+    if(!t || t.done || t.dueAt == null) return;
+    var b = el.querySelector('.due');
+    if(!b) return;
+    var di = dueInfo(t, now);
+    if(b.dataset.lab === di.label) return;
+    b.dataset.lab = di.label;
+    b.className = 'due lv-' + di.level;
+    b.innerHTML = (di.level === 'p10' ? '<span class="dotbreath"></span>' : '') + esc(di.label);
+  });
+}
+
+/* ---------------- 待办操作 ---------------- */
+
+/* 完成序列（V1.6 / FR-17）。时间轴（相对点击那一刻）：
+   0ms   方块填充弹出 + 勾描边起跑 + 删除线由左扫过
+   60ms  涟漪扩散 + 6 颗微粒迸发（最长 460ms）
+   820ms 整行 FLIP 沉入「已完成」区，序号顺延在这一刻统一发生
+   拉到 820ms 而不是原来的 760ms：动效本身变长了，收尾必须等动效跑完，
+   否则「迸发到一半就被抽走」——那正是缺乏完成感的成因之一 */
+var DONE_ANIM_MS = 820;
+var pendingDone = {};            /* id -> setTimeout 句柄：供「完成→立刻恢复」时取消延迟收尾 */
+/* 完成动效闸门：>0 时心跳不得重渲染列表。
+   否则只要点击落在心跳 tick 前的窗口内，列表会在动效跑到一半时整体重绘、行被抽走 */
+var fxBusy = 0;
+var celTimer = null, celHideTimer = null;
+var reduceMotion = false;
+try{
+  reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}catch(err){}
+
+/* 微粒迸发：6 颗沿 60° 均分飞散（其中 1 颗金色点缀），距离 15/18/21px 交替。
+   锚点取真实几何坐标 —— 不硬编码像素，列宽变化也不会漂移 */
+function spawnBurst(rowEl){
+  if(reduceMotion || !rowEl || !rowEl.appendChild || !rowEl.querySelector) return null;
+  if(typeof rowEl.getBoundingClientRect !== 'function') return null;
+  var cb = rowEl.querySelector('.check');
+  if(!cb) return null;
+  var rb = rowEl.getBoundingClientRect(), kb = cb.getBoundingClientRect();
+  var w = document.createElement('span');
+  w.className = 'burst';
+  w.style.setProperty('--cx', (kb.left - rb.left + kb.width / 2) + 'px');
+  w.style.setProperty('--cy', (kb.top - rb.top + kb.height / 2) + 'px');
+  var html = '<i class="ring"></i>';
+  for(var i = 0; i < 6; i++){
+    var a = (i * 60 + (i % 2 ? 11 : -7)) * Math.PI / 180;   /* 60° 均分 + 轻微抖动，去掉机械感 */
+    var d = 15 + (i % 3) * 3;
+    html += '<i class="spark' + (i === 4 ? ' gold' : '') + '" style="--tx:' +
+      (Math.round(Math.cos(a) * d * 10) / 10) + 'px;--ty:' + (Math.round(Math.sin(a) * d * 10) / 10) +
+      'px;animation-delay:' + (i % 3) * 22 + 'ms"></i>';
+  }
+  w.innerHTML = html;
+  rowEl.appendChild(w);
+  return w;
+}
+
+/* ---------------- 勾飞入「已完成」区（V1.7 / FR-21） ----------------
+   完成序列的收尾一拍，时间轴接在 V1.6 序列之后：
+   0ms       勾选框位置浮出一枚小勾，原地升起 + 轻晃（260ms 到位后悬停）
+   820ms     整行沉底重渲染完成，小勾沿弧线飞向「已完成」分隔栏（420ms）
+   约 1240ms 命中：分隔栏轻脉冲一次，小勾缩为一点消失
+   元素挂在 .panel 下，列表每秒心跳重渲染不会把它抹掉；
+   起飞锚点取勾选框真实几何，清单名 / 时间列宽度变化都不会漂移。 */
+var pendingFly = {};            /* id -> {el, timer}：供「完成→立刻恢复」时撤掉未落地的勾 */
+
+function flyTickCancel(t){
+  var f = pendingFly[t.id];
+  if(!f) return;
+  delete pendingFly[t.id];
+  if(f.timer) clearTimeout(f.timer);
+  if(f.el && f.el.remove) f.el.remove();
+}
+
+function flyTickStart(t, rowEl){
+  if(reduceMotion || !rowEl || !rowEl.querySelector) return null;
+  if(typeof rowEl.getBoundingClientRect !== 'function') return null;
+  var cb = rowEl.querySelector('.check');
+  if(!cb) return null;
+  var pr = elPanel.getBoundingClientRect();
+  if(!pr.width) return null;
+  var kb = cb.getBoundingClientRect();
+  var x = kb.left - pr.left + kb.width / 2;
+  var y = kb.top - pr.top + kb.height / 2;
+  var w = document.createElement('span');
+  w.className = 'fly-tick';
+  w.style.left = x + 'px';
+  w.style.top = y + 'px';
+  w.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"' +
+    ' stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 12.6l4.2 4.2L18.6 7.6"/></svg>';
+  elPanel.appendChild(w);
+  if(w.animate){
+    /* 抬升到 -14px：小勾要明显脱离复选框，否则悬停阶段两者重合、看不出「飞」的主体 */
+    w.animate([
+      { transform:'translateY(0) scale(.5)', opacity:0 },
+      { transform:'translateY(-17px) scale(1.1)', opacity:1, offset:.4 },
+      { transform:'translateY(-14px) scale(1)', opacity:1 }
+    ], { duration:260, easing:'cubic-bezier(.34,1.4,.64,1)', fill:'forwards' });
+  }
+  var f = { el:w, x:x, y:y, timer:null };
+  /* 兜底：收尾回调若被取消（完成→立刻恢复），1.8s 后也要把勾收走，不留孤儿节点 */
+  f.timer = setTimeout(function(){ flyTickCancel(t); }, 1800);
+  return f;
+}
+
+function flyTickLand(t, f){
+  var sep = elList.querySelector('.done-sep .lbl');
+  if(!sep || !f.el || !f.el.animate){ flyTickCancel(t); return; }
+  var sr = sep.getBoundingClientRect(), pr = elPanel.getBoundingClientRect();
+  if(!sr.width){ flyTickCancel(t); return; }
+  var dx = (sr.left - pr.left + 8) - f.x;
+  var dy = (sr.top - pr.top + sr.height / 2) - f.y;
+  var a = f.el.animate([
+    { transform:'translate(0,-14px) scale(1)', opacity:1, offset:0 },
+    { transform:'translate(' + (dx * .55) + 'px,' + (dy * .55 - 26) + 'px) scale(.92)', opacity:1, offset:.5 },
+    { transform:'translate(' + dx + 'px,' + dy + 'px) scale(.34)', opacity:0, offset:1 }
+  ], { duration:420, easing:'cubic-bezier(.4,.1,.3,1)', fill:'forwards' });
+  var done = function(){
+    var s2 = elList.querySelector('.done-sep .lbl');   /* 期间可能已重渲染，落点重新取一次 */
+    if(s2){
+      s2.classList.add('pulse');
+      setTimeout(function(){ s2.classList.remove('pulse'); }, 420);
+    }
+    flyTickCancel(t);
+  };
+  if(a && a.onfinish) a.onfinish = done;
+  else setTimeout(done, 440);
+}
+
+/* 庆祝触发条件：当前视图内再无未完成项，且至少完成过 1 条。
+   搜索态不庆祝 —— 搜索是「临时找东西」的视图，把筛选结果清空读成「今天清空了」是误报（FR-17.7） */
+function allClearInView(){
+  if(state.query.trim()) return false;
+  var v = visible();
+  if(v.overdue.length + v.soon.length + v.main.length > 0) return false;
+  return v.done.length > 0;
+}
+function showCelebrate(){
+  if(!elCelebrate) return;
+  var v = visible();
+  var t = document.getElementById('celTitle'), s = document.getElementById('celSub');
+  if(t) t.textContent = (db.ui.listId === 'all') ? '今天的待办都清空了' : '这个清单清空了';
+  if(s) s.textContent = '已完成 ' + v.done.length + ' 条 · 好好休息一下';
+  /* 覆盖范围对齐列表区，不遮挡输入区；列表区高度拿不到时（极端布局）退化为覆盖到输入区上沿 */
+  var top = elList.offsetTop || 0, h = elList.offsetHeight || 0;
+  elCelebrate.style.top = top + 'px';
+  elCelebrate.style.height = h ? h + 'px' : 'auto';
+  elCelebrate.style.bottom = h ? 'auto' : '132px';
+  elCelebrate.hidden = false;
+  void elCelebrate.offsetWidth;        /* 强制重排：让 .show 的过渡与描边从初始帧起跑，否则会被合并成一帧 */
+  elCelebrate.classList.add('show');
+  clearTimeout(celTimer); clearTimeout(celHideTimer);
+  celTimer = setTimeout(function(){
+    elCelebrate.classList.remove('show');
+    celHideTimer = setTimeout(function(){ elCelebrate.hidden = true; }, 240);
+  }, 1600);
+}
+
+/* 完成：数据写入 → 动效 → 延迟收尾（序号顺延与沉底都发生在收尾那一刻）。
+   行内勾选与提醒卡的「完成」出口共用本函数，两处反馈必须完全一致（FR-17.6） */
+function completeTodo(t, el){
+  var hasRow = !!(el && el.classList);
+  t.done = true; t.doneAt = Date.now(); t.updatedAt = Date.now();
+  t.rank = null;
+  t.remindAck = { h1: vnow() };
+  normalizeRanks(); save();
+  if(hasRow){ el.classList.add('completing'); spawnBurst(el); }
+  /* V1.7：完成序列的收尾一拍 —— 勾起飞。锚点拿不到就不出，不伪造位置（FR-21.5） */
+  var fly = hasRow ? flyTickStart(t, el) : null;
+  if(fly) pendingFly[t.id] = fly;
+  var left = db.todos.filter(function(x){ return !x.done; }).length;
+  /* 文案从「序号已顺延」改为「已完成 · 剩余 N 条」：前者在讲内部机制，后者在讲用户进度（FR-17.4）。
+     收尾时若已无未完成项，改由庆祝层承担反馈，不再叠 toast */
+  if(left > 0) toast('已完成 · 剩余 ' + left + ' 条');
+  clearTimeout(pendingDone[t.id]);
+  if(hasRow) fxBusy++;
+  pendingDone[t.id] = setTimeout(function(){
+    delete pendingDone[t.id];
+    if(hasRow) fxBusy = Math.max(0, fxBusy - 1);
+    renderList(true); renderCount(); positionStack(); scanReminders();
+    var cur = byId(t.id);
+    /* 庆祝层（z-index 10）会盖住飞勾（9）：两条收尾反馈不叠加，全清空时只留庆祝 */
+    if(cur && cur.done && allClearInView()){ flyTickCancel(t); showCelebrate(); }
+    else if(fly && pendingFly[t.id]) flyTickLand(t, fly);
+  }, hasRow ? DONE_ANIM_MS : 0);
+  renderCount();
+}
+
+/* 恢复：先取消尚未收尾的完成动作，避免「完成 → 立刻恢复」后延迟回调再弹庆祝 */
+function restoreTodo(t){
+  if(pendingDone[t.id]){
+    clearTimeout(pendingDone[t.id]); delete pendingDone[t.id];
+    fxBusy = Math.max(0, fxBusy - 1);
+  }
+  flyTickCancel(t);            /* 未落地的勾一并撤掉（V1.7 / FR-21.6） */
+  t.done = false; t.doneAt = null; t.updatedAt = Date.now();
+  var maxR = 0;
+  db.todos.forEach(function(x){ if(!x.done) maxR = Math.max(maxR, x.rank || 0); });
+  t.rank = maxR + 1;
+  t.remindAck = { h1: null };
+  normalizeRanks(); save();
+  renderList(true); renderCount(); positionStack(); scanReminders();
+  toast('已恢复，排在末位');
+}
+
+function toggleTodo(id, el){
+  var t = byId(id); if(!t) return;
+  if(!t.done) completeTodo(t, el);
+  else restoreTodo(t);
+  renderCount();
+}
+
+function removeTodo(id, el){
+  el.classList.add('removing');
+  setTimeout(function(){
+    db.todos = db.todos.filter(function(t){ return t.id !== id; });
+    delete forced[id];
+    normalizeRanks(); save();
+    renderList(true); renderCount(); positionStack(); scanReminders();
+  }, 180);
+}
+
+function startEdit(el, id){
+  var t = byId(id); if(!t) return;
+  var titleEl = el.querySelector('.title');
+  if(!titleEl) return;
+  var input = document.createElement('input');
+  input.className = 'title-input'; input.value = t.title;
+  titleEl.replaceWith(input);
+  input.focus(); input.select();
+  var done = false;
+  function finish(commit){
+    if(done) return; done = true;
+    var v = input.value.trim();
+    if(commit && v && v !== t.title){ t.title = v.slice(0,120); t.updatedAt = Date.now(); save(); }
+    renderList(false);
+  }
+  input.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); finish(true); }
+    if(e.key === 'Escape') finish(false);
+  });
+  input.addEventListener('blur', function(){ finish(true); });
+  input.addEventListener('click', function(e){ e.stopPropagation(); });
+  input.addEventListener('dblclick', function(e){ e.stopPropagation(); });
+}
+
+/* ---------------- 拖拽 = 改写序号（FR-07.2） ---------------- */
+var dragId = null;
+function clearDropMarks(){
+  elList.querySelectorAll('.drop-before,.drop-after').forEach(function(el){
+    el.classList.remove('drop-before'); el.classList.remove('drop-after');
+  });
+  elList.querySelectorAll('.drop-hint').forEach(function(el){ el.remove(); });
+}
+/* 在落点行上挂出「松手后成为 #N」。rank 为空表示本次落点无意义，不显示 */
+function showDropHint(el, rank){
+  if(!el || rank == null) return;
+  var s = document.createElement('span');
+  s.className = 'drop-hint';
+  s.textContent = '松手 → #' + rank;
+  el.appendChild(s);
+}
+/* 当前视图里最后一条未完成行 —— 落点落在已完成区时用它承载「排到末尾」的落点线 */
+function lastUndoneRow(){
+  var rows = Array.prototype.slice.call(elList.querySelectorAll('.todo'))
+             .filter(function(r){ return !r.classList.contains('done'); });
+  return rows.length ? rows[rows.length - 1] : null;
+}
+elList.addEventListener('dragover', function(e){
+  if(!dragId) return;
+  e.preventDefault();
+  if(e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+  var el = e.target.closest ? e.target.closest('.todo') : null;
+  clearDropMarks();
+  if(!el) return;                                    /* 空白区：末尾，不画落点线 */
+  if(el.dataset.id === dragId) return;               /* 自己身上：无操作 */
+  /* 已完成区：语义是「排到未完成项末尾」，落点线画在最后一条未完成行下沿 */
+  if(el.classList.contains('done')){
+    var tail = lastUndoneRow();
+    if(tail && tail.dataset.id !== dragId){
+      tail.classList.add('drop-after');
+      showDropHint(tail, previewRankAt(dragId, null, true));
+    }
+    return;
+  }
+  var a = byId(dragId), b = byId(el.dataset.id);
+  if(!a || !b || a.done || b.done) return;
+  var r = el.getBoundingClientRect();
+  var after = e.clientY >= r.top + r.height/2;
+  el.classList.add(after ? 'drop-after' : 'drop-before');
+  showDropHint(el, previewRankAt(dragId, el.dataset.id, after));
+});
+elList.addEventListener('dragleave', function(e){
+  if(!elList.contains(e.relatedTarget)) clearDropMarks();
+});
+elList.addEventListener('drop', function(e){
+  if(!dragId) return;
+  e.preventDefault();
+  var el = e.target.closest ? e.target.closest('.todo') : null;
+  /* 落在空白区 / 已完成区一律视为「排到末尾」，不再静默无反应（FR-23） */
+  var after = el ? el.classList.contains('drop-after') : true;
+  reorderRanks(dragId, el ? el.dataset.id : null, after);
+  clearDropMarks();
+});
+
+/* 视觉次序：DOM 里未完成行的真实先后顺序（跨分区，与用户在屏幕上看到的完全一致）。
+   落点必须以它为准 —— 分区由截止时间决定、rank 只决定分区内的先后，
+   两者叠加才是屏幕次序；任何按 listId 或按 rank 单维推导都会与所见错位（V1.8 的病根）。 */
+function visualOrder(){
+  var out = [];
+  Array.prototype.slice.call(elList.querySelectorAll('.todo')).forEach(function(el){
+    if(el.classList.contains('done')) return;
+    var t = byId(el.dataset.id);
+    if(t && out.indexOf(t) < 0) out.push(t);
+  });
+  return out;
+}
+/* 把「把 fromId 放到 toId 的前面/后面」翻译成一份 rank 分配方案。
+   toId 为空 = 落在空白区或已完成区，语义为「排到末尾」。
+   返回 null 表示这次拖动不应产生任何变化。 */
+function planRanks(fromId, toId, placeAfter){
+  var dragged = byId(fromId);
+  if(!dragged || dragged.done) return null;
+  if(toId && toId === fromId) return null;      /* 拖到自己身上：一次空操作，别把它甩到末尾 */
+  var vis = visualOrder();
+  var fi = vis.indexOf(dragged);
+  if(fi < 0) return null;                       /* 源不在当前视图：拒绝 */
+  var target = toId ? byId(toId) : null;
+  if(target && target.done) target = null;      /* 已完成区 → 排到未完成项末尾 */
+  vis.splice(fi, 1);
+  var at = vis.length;
+  if(target){
+    var ti = vis.indexOf(target);
+    if(ti >= 0) at = placeAfter ? ti + 1 : ti;
+  }
+  vis.splice(at, 0, dragged);
+  /* rank 槽位：视图内项只在「它们原本占据的那组 rank」里重新落座，
+     视图外项的 rank 一字不动 —— 全局仍然唯一，别人的相对秩序也不受牵连。 */
+  var slots = vis.map(function(t){ return (t.rank == null ? 1e9 : t.rank); })
+                 .sort(function(a,b){ return a - b; });
+  var rankOf = {};
+  vis.forEach(function(t, i){ rankOf[t.id] = slots[i]; });
+  return { order: vis, rankOf: rankOf, dragged: dragged, at: at };
+}
+/* 预演：这次落点会让被拖项变成几号（拖动途中实时显示，不写库） */
+function previewRankAt(fromId, toId, placeAfter){
+  var p = planRanks(fromId, toId, placeAfter);
+  if(!p) return null;
+  return p.rankOf[p.dragged.id];
+}
+function reorderRanks(fromId, toId, placeAfter){
+  var p = planRanks(fromId, toId, placeAfter);
+  if(!p) return;
+  p.order.forEach(function(t){
+    if(p.rankOf[t.id] !== undefined){ t.rank = p.rankOf[t.id]; t.updatedAt = Date.now(); }
+  });
+  normalizeRanks(db);        /* 兜底：吸收历史遗留的并列 rank，保证全局 1..n 连续唯一 */
+  save();
+  renderList(true);
+  toast('已调整为 #' + p.dragged.rank);
+}
+
+/* ---------------- 输入区 ---------------- */
+function renderComposer(){
+  var lists = sortedLists();
+  /* V1.9.1 / FR-24.1：非「全部」视图时，新建默认分类一律跟随当前清单 Tab。
+     composePending 期间不覆盖 —— 用户可能已显式选过分类，正在创建途中（FR-24.3）。
+     「全部」视图保留本会话上次使用的清单（FR-24.2），无记录时取第一个。 */
+  if(!composePending && db.ui.listId !== 'all' && draft.listId !== db.ui.listId){
+    draft.listId = db.ui.listId;
+  }
+  if(!draft.listId || !listById(draft.listId)){
+    draft.listId = (db.ui.listId !== 'all' ? db.ui.listId : (lists[0] || {}).id || '');
+  }
+  elListSelect.innerHTML = lists.map(function(l){
+    return '<option value="' + l.id + '"' + (l.id === draft.listId ? ' selected':'') + '>' + esc(l.name) + '</option>';
+  }).join('');
+
+  var txt = draft.dueAt == null ? '截止时间' : fmtDueLabel(draft.dueAt, vnow());
+  document.getElementById('dueBtnText').textContent = txt;
+  elDueBtn.classList.toggle('on', draft.dueAt != null);
+}
+
+/* 输入区展开态（不依赖 :focus-within，兼容 Safari 点击按钮不聚焦） */
+function expandComposer(){ elComposer.classList.add('expanded'); }
+function collapseComposer(){
+  elComposer.classList.remove('expanded');
+  if(composePending) cancelCompose(); else closeDuePop();
+}
+elComposer.addEventListener('focusin', expandComposer);
+elComposer.addEventListener('pointerdown', function(e){
+  if(e.target.closest && e.target.closest('#duePop')) return;
+  expandComposer();
+});
+document.addEventListener('pointerdown', function(e){
+  /* 选择器已移出 .composer，必须单独豁免，否则点它内部会触发 collapseComposer */
+  if(elComposer.contains(e.target) || elDuePop.contains(e.target) || elMovePop.contains(e.target)) return;
+  collapseComposer();
+});
+elListSelect.addEventListener('change', function(){ draft.listId = elListSelect.value; });
+
+/* ---------------- 截止时间选择器 ---------------- */
+/* 定位：.due-pop 是 .panel 的直接子元素，坐标一律以 panel 为基准，并夹在面板可视区内。
+   默认贴在锚点下方；下方放不下时翻到锚点上方。 */
+function openDuePop(target, anchor){
+  dueTarget = target;
+  if(!composePending) resetDuePopLabels();                  /* 编辑态用默认按钮文案 */
+  elDuePop.classList.add('show');
+  syncDuePop();
+  positionDuePop(anchor);
+  requestAnimationFrame(function(){ positionDuePop(anchor); });
+}
+
+/* 当前目标上的截止时间（草稿态取 draft，编辑态取条目） */
+function currentDueValue(){
+  if(dueTarget.type === 'draft') return draft.dueAt;
+  var t = byId(dueTarget.id);
+  return t ? t.dueAt : null;
+}
+
+/* 把当前值反映到选择器上：日期/时间框、预设高亮、清除按钮可见性（FR-12.10） */
+function syncDuePop(){
+  var cur = currentDueValue();
+  var base = cur == null ? (composePending ? tonightTs() : vnow() + HOUR) : cur;
+  var d = new Date(base);
+  document.getElementById('dpDate').value = d.getFullYear() + '-' + p2(d.getMonth()+1) + '-' + p2(d.getDate());
+  document.getElementById('dpTime').value = p2(d.getHours()) + ':' + p2(d.getMinutes());
+  document.getElementById('dpClear').style.visibility = (cur != null || composePending) ? 'visible' : 'hidden';
+  document.querySelectorAll('#dpRow .dp').forEach(function(b){
+    b.classList.toggle('on', cur != null && presetTs(b.dataset.preset) === cur);
+  });
+}
+
+function positionDuePop(anchor){
+  var pr = elPanel.getBoundingClientRect();
+  if(pr.height < 40) return;
+  var h = elDuePop.offsetHeight || 148;
+  var top, origin = 'bottom center';
+  if(anchor && anchor.isConnected !== false && anchor.getBoundingClientRect){
+    var r = anchor.getBoundingClientRect();
+    var relTop = r.top - pr.top;
+    top = r.bottom - pr.top + 6;
+    if(top + h > pr.height - 8){ top = relTop - h - 6; origin = 'bottom center'; }
+    else origin = 'top center';
+  } else {
+    top = pr.height - h - 14;
+  }
+  elDuePop.style.transformOrigin = origin;
+  elDuePop.style.top = clamp(top, 8, Math.max(8, pr.height - h - 8)) + 'px';
+}
+
+function closeDuePop(){ elDuePop.classList.remove('show'); }
+
+/* ---------------- 更换清单（V1.7 / FR-19） ----------------
+   入口是行内的清单名（常显可点）与它弹出的单选列表。
+   只改 listId，不动 rank —— rank 是全局唯一序号，换清单不改变优先级，也不重排（FR-19.5）。 */
+var moveTargetId = null;
+
+function positionMovePop(anchor){
+  var pr = elPanel.getBoundingClientRect();
+  if(pr.height < 40) return;
+  var w = elMovePop.offsetWidth || 170, h = elMovePop.offsetHeight || 150;
+  var left = 14, top = pr.height - h - 14;
+  if(anchor && anchor.getBoundingClientRect){
+    var r = anchor.getBoundingClientRect();
+    left = r.left - pr.left;
+    top = r.bottom - pr.top + 5;
+    if(top + h > pr.height - 8) top = r.top - pr.top - h - 5;
+  }
+  elMovePop.style.left = clamp(left, 10, Math.max(10, pr.width - w - 10)) + 'px';
+  elMovePop.style.top = clamp(top, 8, Math.max(8, pr.height - h - 8)) + 'px';
+}
+function openMovePop(id, anchor){
+  var t = byId(id); if(!t) return;
+  var lists = sortedLists();
+  /* 只有一个清单时没有可换的目标：不出一个选项的空下拉，直接说明原因（FR-19.7） */
+  if(lists.length < 2){ toast('只有「' + lists[0].name + '」一个清单'); return; }
+  moveTargetId = id;
+  var html = '<div class="mp-h">移动到</div><div class="mp-list">';
+  lists.forEach(function(l){
+    var on = (l.id === t.listId);
+    html += '<button data-mv="' + l.id + '"' + (on ? ' class="on"' : '') +
+      ' aria-selected="' + on + '">' +
+      '<span class="mp-t">' + esc(l.name) + '</span>' +
+      '<svg class="mp-ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"' +
+      ' stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>' +
+      '</button>';
+  });
+  html += '</div>';
+  elMovePop.innerHTML = html;
+  elMovePop.classList.add('show');
+  positionMovePop(anchor);
+  requestAnimationFrame(function(){ positionMovePop(anchor); });
+}
+function closeMovePop(){
+  elMovePop.classList.remove('show');
+  moveTargetId = null;
+}
+elMovePop.addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('button[data-mv]') : null;
+  if(!b) return;
+  var id = moveTargetId, to = b.dataset.mv, t = id ? byId(id) : null;
+  closeMovePop();
+  if(!t || t.listId === to) return;
+  var toList = listById(to);
+  t.listId = to;
+  t.updatedAt = Date.now();
+  save();
+  renderAll();
+  toast('已移动到「' + (toList ? toList.name : '') + '」');
+});
+elMovePop.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
+document.addEventListener('pointerdown', function(e){
+  if(!elMovePop.classList.contains('show')) return;
+  /* 同一个入口的「再点一次收起」交给行内点击判断，这里不抢 */
+  if(e.target.closest && e.target.closest('[data-act="move"]')) return;
+  closeMovePop();
+});
+
+/* ---------------- 备注：悬停提示 + 编辑器（FR-15） ---------------- */
+function hideNoteTip(){ elNoteTip.style.display = 'none'; }
+
+function showNoteTip(row, t){
+  if(!t || !t.note || noteTargetId === t.id) return;
+  elNoteTip.textContent = t.note;
+  elNoteTip.style.display = 'block';
+  var r = row.getBoundingClientRect();
+  var pr = elPanel.getBoundingClientRect();
+  var top = r.bottom - pr.top + 6;
+  elNoteTip.style.top = top + 'px';
+  elNoteTip.style.bottom = 'auto';
+  /* 底部放不下则翻到条目上方 */
+  requestAnimationFrame(function(){
+    var th = elNoteTip.offsetHeight;
+    if(top + th > pr.height - 8){
+      var t2 = r.top - pr.top - th - 6;
+      elNoteTip.style.top = Math.max(6, t2) + 'px';
+    }
+  });
+}
+
+var notePopRow = null;
+function openNotePop(id, anchor){
+  var t = byId(id); if(!t) return;
+  noteTargetId = id;
+  hideNoteTip();
+  elNpText.value = t.note || '';
+  elNotePop.style.display = 'block';
+  if(anchor && anchor.getBoundingClientRect){
+    var r = anchor.getBoundingClientRect();
+    var pr = elPanel.getBoundingClientRect();
+    var w = 248;
+    var left = clamp(r.left - pr.left, 10, Math.max(10, pr.width - w - 10));
+    var top = r.bottom - pr.top + 6;
+    elNotePop.style.left = left + 'px';
+    elNotePop.style.top = top + 'px';
+    elNotePop.style.bottom = 'auto';
+    requestAnimationFrame(function(){
+      var ph = elNotePop.offsetHeight;
+      if(top + ph > pr.height - 8){
+        elNotePop.style.top = Math.max(8, r.top - pr.top - ph - 6) + 'px';
+      }
+    });
+  }
+  setTimeout(function(){ elNpText.focus(); }, 0);
+}
+
+function closeNotePop(commitSave){
+  if(elNotePop.style.display === 'none') return;
+  var t = noteTargetId ? byId(noteTargetId) : null;
+  if(t && commitSave !== false){
+    var v = elNpText.value.replace(/\s+$/,'').slice(0,200);
+    if(v !== (t.note || '')){
+      t.note = v;
+      t.updatedAt = Date.now();
+      save();
+    }
+  }
+  noteTargetId = null;
+  notePopRow = null;
+  elNotePop.style.display = 'none';
+  renderList(false); renderCount();
+}
+
+document.getElementById('npOk').addEventListener('click', function(){ closeNotePop(true); });
+document.getElementById('npClear').addEventListener('click', function(){
+  elNpText.value = '';
+  closeNotePop(true);
+  toast('已清除备注');
+});
+elNpText.addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); closeNotePop(true); }
+  if(e.key === 'Escape'){ e.stopPropagation(); closeNotePop(false); }
+});
+elNotePop.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
+
+/* 行悬停 → 显示备注气泡（事件委托，兼容重渲染） */
+elList.addEventListener('mouseover', function(e){
+  var row = e.target.closest ? e.target.closest('.todo') : null;
+  if(!row || row.classList.contains('done')){ hideNoteTip(); return; }
+  var t = byId(row.dataset.id);
+  if(t && t.note) showNoteTip(row, t);
+  else hideNoteTip();
+});
+elList.addEventListener('mouseleave', hideNoteTip);
+elList.addEventListener('dragstart', hideNoteTip);
+
+function setDue(ts){
+  var now = vnow();
+  var t = null;
+  if(dueTarget.type === 'draft'){ draft.dueAt = ts; }
+  else {
+    t = byId(dueTarget.id);
+    if(t){
+      t.dueAt = ts;
+      t.remindAck = { h1:null };
+      delete forced[t.id];
+      t.updatedAt = Date.now();
+    }
+  }
+  save(); closeDuePop(); renderComposer();
+  if(t){ renderList(true); renderCount(); scanReminders(); }
+  if(ts != null && ts <= now) toast('该时间已过去，条目会进入「已逾期」分区');
+  else if(ts != null) toast('截止时间已设为 ' + fmtDueLabel(ts, now));
+  else toast('已清除截止时间');
+}
+
+function presetTs(kind){
+  var now = vnow();
+  function at(dayShift, h, mi){
+    var x = new Date(startOfDay(now));
+    x.setDate(x.getDate() + dayShift);
+    x.setHours(h, mi, 0, 0);
+    return x.getTime();
+  }
+  if(kind === 'today18') return at(0, 18, 0);
+  if(kind === 'tonight') return at(0, 23, 59);
+  if(kind === 'tomorrow') return at(1, 23, 59);
+  if(kind === 'tom9')    return at(1, 9, 0);
+  if(kind === 'tom18')   return at(1, 18, 0);
+  if(kind === 'fri18')   return at((5 - new Date(now).getDay() + 7) % 7, 18, 0);
+  if(kind === 'd3')      return at(3, 18, 0);
+  return now + HOUR;
+}
+
+elDueBtn.addEventListener('click', function(e){
+  e.stopPropagation();
+  if(composePending){ syncDuePop(); positionDuePop(elDueBtn); return; }  /* 新建流程中不关闭 */
+  if(elDuePop.classList.contains('show')) closeDuePop();
+  else openDuePop({ type:'draft' }, elDueBtn);
+});
+function readDueInputs(){
+  var dv = document.getElementById('dpDate').value;
+  var tv = document.getElementById('dpTime').value;
+  if(!dv) return null;
+  var parts = dv.split('-');
+  var h = 23, mi = 59;
+  if(tv){
+    var tp = tv.split(':');
+    h = parseInt(tp[0], 10); mi = parseInt(tp[1], 10);
+  }
+  var d = new Date(parseInt(parts[0],10), parseInt(parts[1],10) - 1, parseInt(parts[2],10), h, mi, 0, 0);
+  return d.getTime();
+}
+document.getElementById('dpRow').addEventListener('click', function(e){
+  var b = e.target.closest('.dp'); if(!b) return;
+  /* 新建流程中：选预设只更新选中态，不关闭、不创建（等回车确认） */
+  if(composePending){ draft.dueAt = presetTs(b.dataset.preset); syncDuePop(); return; }
+  setDue(presetTs(b.dataset.preset));
+});
+document.getElementById('dpOk').addEventListener('click', function(){
+  var ts = readDueInputs();
+  if(ts == null){ toast('请先选择日期'); return; }
+  if(composePending){ draft.dueAt = ts; confirmCompose(); return; }   /* 主出口：创建 */
+  setDue(ts);
+});
+document.getElementById('dpClear').addEventListener('click', function(){
+  /* 新建流程中，这个出口的意思是「不设截止时间」→ 直接创建 */
+  if(composePending){ draft.dueAt = null; confirmCompose(); return; }
+  setDue(null);
+});
+/* 弹层内任何位置回车都等于点主按钮（新建流程） */
+elDuePop.addEventListener('keydown', function(e){
+  if(e.key !== 'Enter' || !composePending) return;
+  e.preventDefault();
+  document.getElementById('dpOk').click();
+});
+
+/* ---------------- 新建流程（V1.5 / FR-12.9） ----------------
+   回车 → 自动带出时间选择器（默认今晚 23:59）→ 再回车创建。
+   composePending 保存「待确认的标题」；取消时把标题退回输入框，不丢用户输入。 */
+var composePending = null;
+
+/* 今晚 24 点前（23:59）；若已过 23:49，这个点已不现实 → 顺延到明晚 */
+function tonightTs(){
+  var t = presetTs('tonight');
+  if(t - vnow() < 10*MIN) t = presetTs('tomorrow');
+  return t;
+}
+
+function resetDuePopLabels(){
+  document.getElementById('dpOk').textContent = '确定';
+  document.getElementById('dpClear').textContent = '清除';
+  document.getElementById('dpTip').textContent = '只选日期时自动视为当天 23:59';
+  /* V1.7：备注行只在新建流程出现。编辑既有条目的截止时间时不碰备注 —— 备注有自己的编辑器 */
+  elDpNoteWrap.classList.remove('show');
+  elDpNote.value = '';
+}
+
+elNew.addEventListener('keydown', function(e){
+  if(e.key !== 'Enter') return;
+  e.preventDefault();
+  if(composePending){ confirmCompose(); return; }
+  var v = elNew.value.trim();
+  if(!v){
+    elComposer.classList.add('shake');
+    setTimeout(function(){ elComposer.classList.remove('shake'); }, 220);
+    return;
+  }
+  beginCompose(v);
+});
+
+function beginCompose(title){
+  if(elDuePop.classList.contains('show')) closeDuePop();
+  composePending = { title: title };
+  draft.dueAt = tonightTs();
+  /* V1.9.1 / FR-24.3：仅在选择器当前值无效时兜底 —— 用户在展开态显式选过的分类必须被尊重 */
+  if(!draft.listId || !listById(draft.listId)){
+    draft.listId = (db.ui.listId !== 'all' ? db.ui.listId : (sortedLists()[0] || {}).id || '');
+  }
+  /* V1.7：备注行必须在 openDuePop 之前显形 —— 否则 positionDuePop 量到的高度不含它，
+     弹层会被顶出面板下沿（与 V1.2 的 BUG-1 同类：先定内容再定位） */
+  elDpNote.value = '';
+  elDpNoteWrap.classList.add('show');
+  openDuePop({ type:'draft' }, elNew);
+  document.getElementById('dpOk').textContent = '创建待办';
+  document.getElementById('dpClear').textContent = '不设时间';
+  document.getElementById('dpTip').textContent = '已默认今晚 23:59 · 备注可留空 · 回车即创建';
+  elDpNote.focus();          /* 焦点落在备注上：可直接写备注，回车照样创建 */
+}
+
+function confirmCompose(){
+  if(!composePending) return;
+  var v = (elNew.value.trim() || composePending.title).slice(0,120);
+  var lid = draft.listId;
+  /* V1.9.1 / FR-24.4：删除「非全部视图强制覆盖为当前清单」—— 所见即所得：
+     创建落库的分类 = 选择器里显示的那个；仅在值非法时兜底 */
+  if(!lid || !listById(lid)){
+    lid = (db.ui.listId !== 'all' ? db.ui.listId : (sortedLists()[0] || {}).id || '');
+  }
+  var due = draft.dueAt;
+  var note = (elDpNote.value || '').replace(/\s+$/, '').slice(0, 200);   /* V1.7：备注随创建一起落库 */
+  composePending = null;
+  draft.dueAt = null;
+  closeDuePop();
+  resetDuePopLabels();
+  createTodo(v, lid, due, note);
+}
+
+/* 取消新建：标题退回输入框，不创建 */
+function cancelCompose(){
+  if(!composePending) return;
+  var v = composePending.title;
+  composePending = null;
+  draft.dueAt = null;
+  closeDuePop();
+  resetDuePopLabels();
+  elNew.value = v;
+  renderComposer();
+  elNew.focus();
+}
+
+function createTodo(title, lid, due, note){
+  var maxR = 0;                                   /* V1.5：序号全局唯一，取全局最大序号 */
+  db.todos.forEach(function(t){ if(!t.done) maxR = Math.max(maxR, t.rank || 0); });
+  var t = {
+    id: uid('d'), title: title, rank: maxR + 1, dueAt: due,
+    done:false, doneAt:null, listId: lid, note: note || '',
+    remindAck: { h1:null },
+    createdAt: Date.now(), updatedAt: Date.now()
+  };
+  db.todos.push(t);
+  elNew.value = '';
+  normalizeRanks(); save();
+  renderList(true); renderCount(); renderComposer(); positionStack(); scanReminders();
+  elNew.focus();
+  /* V1.9.1 / FR-24.5：创建到了非当前视图的清单时，明确告知归属 */
+  var lobj = listById(t.listId);
+  var inView = (db.ui.listId === 'all' || db.ui.listId === t.listId);
+  toast((due == null ? '已创建（无截止时间，排在 #' + t.rank + '）'
+                     : '已创建（截止 ' + fmtDueLabel(due, vnow()) + '，排在 #' + t.rank + '）') +
+        (t.note ? ' · 已附备注' : '') +
+        (!inView && lobj ? ' · 已归入「' + lobj.name + '」' : ''));
+}
+
+/* ---------------- 顶栏控件 ---------------- */
+document.getElementById('btnPin').addEventListener('click', togglePin);
+document.getElementById('btnMore').addEventListener('click', function(e){
+  e.stopPropagation();
+  var r = this.getBoundingClientRect();
+  elMenu.style.position = 'fixed';
+  elMenu.style.left = Math.min(r.right - 176, window.innerWidth - 190) + 'px';
+  elMenu.style.top = (r.bottom + 6) + 'px';
+  elMenu.style.transformOrigin = 'top right';
+  elMenu.classList.toggle('open');
+});
+document.addEventListener('pointerdown', function(e){
+  if(!elMenu.contains(e.target) && e.target.id !== 'btnMore') elMenu.classList.remove('open');
+});
+elMenu.addEventListener('click', function(e){
+  var b = e.target.closest('button'); if(!b) return;
+  var a = b.dataset.m;
+  elMenu.classList.remove('open');
+  if(a === 'export') doExport();
+  else if(a === 'import') document.getElementById('fileInput').click();
+  else if(a === 'fold'){ db.ui.doneCollapsed = !db.ui.doneCollapsed; save(); renderList(false); positionStack(); }
+  else if(a === 'ackall') ackAll();
+  else if(a === 'wipe') doWipe();
+});
+
+function ackAll(){
+  var n = queue.length;
+  if(!n){ toast('当前没有待处理的提醒'); return; }
+  var now = vnow();
+  queue.forEach(function(q){
+    if(q.t.remindAck[q.key] == null) q.t.remindAck[q.key] = now;
+    delete forced[q.t.id];
+  });
+  save(); scanReminders();
+  toast('已确认 ' + n + ' 条提醒');
+}
+
+elSearch.addEventListener('input', function(){
+  state.query = elSearch.value;
+  document.getElementById('searchClear').classList.toggle('show', !!elSearch.value);
+  renderList(false); positionStack();
+});
+document.getElementById('searchClear').addEventListener('click', function(){
+  elSearch.value = ''; state.query = '';
+  this.classList.remove('show');
+  renderList(false); positionStack(); elSearch.focus();
+});
+
+/* Esc：只作用于面板与编辑态，对提醒卡片无效（FR-14.8） */
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Escape') return;
+  if(document.getElementById('mask').classList.contains('open')){ closeConfirm(false); return; }
+  if(elMenu.classList.contains('open')){ elMenu.classList.remove('open'); return; }
+  if(elMovePop.classList.contains('show')){ closeMovePop(); return; }
+  if(elDuePop.classList.contains('show')){
+    if(composePending) cancelCompose(); else closeDuePop();
+    return;
+  }
+  if(document.querySelector('.menu.tmp')){ closeMenus(); return; }
+  if(document.activeElement === elNew && elNew.value){ elNew.value = ''; return; }
+  if(isOpen) closePanel();      /* V1.9.2：Esc 只收面板，不动钉住状态 */
+  /* 刻意不对提醒卡片做任何处理 —— 唯一出口是「知道了」/「标记完成」 */
+});
+
+/* ---------------- 提醒引擎（FR-13） ---------------- */
+var queue = [];
+var forced = {};
+var cardVisible = false;
+var shownId = null;
+var lastZoneSig = '';
+
+function scanReminders(){
+  var now = vnow();
+  var cands = [];
+  var dirty = false;
+
+  db.todos.forEach(function(t){
+    if(t.done || t.dueAt == null) return;
+    var isForced = !!forced[t.id];
+    if(!isForced && t.dueAt <= now) return;   /* 逾期不弹卡（FR-13.4） */
+    var i = -1;
+    if(isForced) i = 0;
+    else {
+      var rem = t.dueAt - now;
+      for(var k=0;k<THRESH.length;k++){
+        if(rem > THRESH[k].ms) continue;
+        /* FR-13.9：提醒时刻早于创建时刻 → 创建时这一档已经过去，不再补发
+           （例：23:30 建一条今晚 23:59 到期的待办，22:59 这个提醒点已过，不弹卡） */
+        if(t.dueAt - THRESH[k].ms < t.createdAt) continue;
+        i = k; break;
+      }
+    }
+    if(i < 0) return;
+    var key = THRESH[i].key;
+    if(!isForced && t.remindAck[key] != null) return;
+    /* 跨阈值去重：更宽松的阈值一并标记为已确认（FR-13.8） */
+    for(var j=i+1;j<THRESH.length;j++){
+      if(t.remindAck[THRESH[j].key] == null){ t.remindAck[THRESH[j].key] = now; dirty = true; }
+    }
+    cands.push({ t:t, key:key, w:i, rem: t.dueAt - now });
+  });
+
+  cands.sort(function(a,b){
+    if(a.w !== b.w) return a.w - b.w;
+    return a.t.dueAt - b.t.dueAt;
+  });
+  queue = cands;
+  if(dirty) save();
+  syncCard();
+}
+
+function syncCard(){
+  if(!queue.length){
+    if(cardVisible || shownId){
+      cardVisible = false; shownId = null;
+      elCard.classList.remove('show');
+      positionStack();
+    }
+    renderCount();
+    return;
+  }
+  var top = queue[0];
+  if(top.t.id !== shownId){
+    shownId = top.t.id;
+    cardVisible = true;
+    elCard.classList.remove('show');          /* 先收起，两帧后再淡入 */
+    renderCardFull(top);
+    positionStack();
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        positionStack();
+        elCard.classList.add('show');
+      });
+    });
+  } else {
+    refreshCardDynamic();
+  }
+  renderCount();
+}
+
+function cardLevelClass(level){
+  return level === 'p10' ? 'lv-p10' : (level === 'p1h' ? 'lv-p1h' : 'lv-far');
+}
+
+/* 卡片只留三样：做什么、还剩多久、两个出口（FR-14.9 精简） */
+function renderCardFull(item){
+  document.getElementById('rcTitle').textContent = item.t.title;
+  fillCardFields();
+}
+
+/* 只刷新随时间变化的字段，不重建卡片 */
+function refreshCardDynamic(){
+  if(!cardVisible || !queue.length) return;
+  fillCardFields();
+}
+
+function fillCardFields(){
+  var item = queue[0];
+  if(!item) return;
+  var di = dueInfo(item.t, vnow());
+  if(!di) return;
+  document.getElementById('rcRemain').textContent = '还有 ' + di.remain;
+
+  var more = document.getElementById('rcMore');
+  if(queue.length > 1){
+    more.style.display = '';
+    more.textContent = '另有 ' + (queue.length - 1) + ' 条即将到期';
+  } else {
+    more.style.display = 'none';
+  }
+
+  var lv = forced[item.t.id] ? 'p10' : di.level;
+  var cls = 'rcard' + (elCard.classList.contains('show') ? ' show' : '') + ' ' + cardLevelClass(lv);
+  if(elCard.className !== cls) elCard.className = cls;
+}
+
+/* 唯一出口一：知道了 */
+document.getElementById('rcOk').addEventListener('click', function(){
+  var item = queue[0];
+  if(!item) return;
+  item.t.remindAck[item.key] = vnow();
+  delete forced[item.t.id];
+  save();
+  elCard.classList.remove('show');
+  shownId = null; cardVisible = false;
+  positionStack();
+  setTimeout(function(){ scanReminders(); }, 130);
+  toast('已确认提醒');
+});
+
+/* 唯一出口二：标记完成 */
+document.getElementById('rcDone').addEventListener('click', function(){
+  var item = queue[0];
+  if(!item) return;
+  var t = item.t;
+  var el = elList.querySelector('.todo[data-id="' + t.id + '"]');
+  delete forced[t.id];
+  elCard.classList.remove('show');
+  shownId = null; cardVisible = false;
+  positionStack();
+  /* 复用行内勾选的同一条完成序列（V1.6 / FR-17.6）：卡片出口与行内出口的反馈不允许有差异 */
+  completeTodo(t, el);
+});
+
+/* ---------------- 引擎心跳（1 秒，FR-13.3） ---------------- */
+setInterval(function(){
+  var rn = Date.now();
+  var dt = rn - lastReal;
+  lastReal = rn;
+  if(timeScale !== 1) vOff += dt * (timeScale - 1);
+
+  scanReminders();
+
+  var now = vnow();
+  var d = new Date(now);
+  var c = document.getElementById('clock');
+  if(c) c.textContent = WEEK[d.getDay()] + ' ' + d.getHours() + ':' + p2(d.getMinutes());
+
+  if(isOpen){
+    refreshDueLabels();
+    var v = visible();
+    /* fxBusy > 0：有完成动效正在跑，这一拍不重渲染（收尾时由 completeTodo 自己重渲染） */
+    if(zoneSig(v) !== lastZoneSig && !fxBusy){ renderList(true); renderCount(); }
+    renderCount();
+  }
+}, 1000);
+
+/* ---------------- 导出 / 导入 / 清空 ---------------- */
+function doExport(){
+  var blob = new Blob([JSON.stringify(db, null, 2)], { type:'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  var d = new Date(vnow());
+  a.href = url;
+  a.download = 'fushi-backup-' + d.getFullYear() + p2(d.getMonth()+1) + p2(d.getDate()) + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+  toast('已导出 ' + db.todos.length + ' 条（version ' + db.version + '）');
+}
+
+document.getElementById('fileInput').addEventListener('change', function(e){
+  var f = e.target.files && e.target.files[0];
+  if(!f) return;
+  var reader = new FileReader();
+  reader.onload = function(){
+    var parsed;
+    try{ parsed = JSON.parse(String(reader.result)); }
+    catch(err){ toast('文件解析失败，请检查 JSON 格式'); return; }
+    var from = (parsed && parsed.version === 2) ? 'V1.1' : 'V1.0（将自动迁移）';
+    askConfirm('导入数据？', '来源版本 ' + from + '。将覆盖当前全部清单、标签与待办，不可撤销。', '导入', true).then(function(ok){
+      if(!ok) return;
+      db = normalize(parsed);
+      save();
+      /* V1.9.2：导入后同样不钉住（钉住不持久化） */
+      pinned = false; db.ui.pinned = false;
+      elOrb.classList.toggle('pinned', false);
+      document.getElementById('btnPin').classList.toggle('on', false);
+      state.query = ''; elSearch.value = '';
+      document.getElementById('searchClear').classList.remove('show');
+      queue = []; forced = {}; shownId = null; cardVisible = false;
+      elCard.classList.remove('show');
+      initOrb(); renderAll(); renderCount(); scanReminders();
+      toast('导入完成（version ' + db.version + '）');
+    });
+  };
+  reader.readAsText(f);
+  e.target.value = '';
+});
+
+function doWipe(){
+  askConfirm('清空全部数据？', '所有清单与待办都会被删除，且无法恢复。建议先导出备份。', '清空全部', true).then(function(ok){
+    if(!ok) return;
+    db = seed();
+    db.lists = [{id:uid('l'), name:'收件箱', order:0, createdAt:Date.now()}];
+    db.todos = [];
+    db.ui.coachMarkSeen = true;
+    save();
+    state.query = ''; elSearch.value = '';
+    document.getElementById('searchClear').classList.remove('show');
+    queue = []; forced = {}; shownId = null; cardVisible = false;
+    elCard.classList.remove('show');
+    renderAll(); renderCount();
+    toast('已清空全部数据');
+  });
+}
+
+/* ---------------- 演示控制台 ---------------- */
+elScaleRow.addEventListener('click', function(e){
+  var b = e.target.closest('button'); if(!b) return;
+  timeScale = parseInt(b.dataset.scale, 10) || 1;
+  db.ui.timeScale = timeScale; save();
+  var btns = elScaleRow.querySelectorAll('.c-btn');
+  for(var i=0;i<btns.length;i++) btns[i].classList.toggle('on', btns[i] === b);
+  toast(timeScale === 1 ? '时间恢复真实速度' : ('时间加速 ' + timeScale + '×：1 小时 ≈ ' + Math.round(3600/timeScale) + ' 秒'));
+  renderCount();
+});
+
+document.getElementById('btnForce').addEventListener('click', function(){
+  var cands = db.todos.filter(function(t){ return !t.done && t.dueAt != null; })
+                      .sort(function(a,b){ return a.dueAt - b.dueAt; });
+  if(!cands.length){ toast('示例数据里没有设置截止时间的待办'); return; }
+  var t = cands[0];
+  forced[t.id] = true;
+  scanReminders();
+  toast('已强制触发「' + t.title.slice(0, 12) + '」的提醒');
+});
+
+document.getElementById('btnReset').addEventListener('click', function(){
+  askConfirm('重置为示例数据？', '当前数据将被示例数据覆盖，此操作不可撤销。', '重置', true).then(function(ok){
+    if(!ok) return;
+    var sc = timeScale;
+    db = seed();
+    db.ui.timeScale = sc;
+    save();
+    pinned = false; elOrb.classList.remove('pinned');
+    document.getElementById('btnPin').classList.remove('on');
+    state.query = ''; elSearch.value = '';
+    document.getElementById('searchClear').classList.remove('show');
+    queue = []; forced = {}; shownId = null; cardVisible = false;
+    elCard.classList.remove('show');
+    initOrb(); renderAll(); renderCount(); scanReminders();
+    toast('已重置为示例数据');
+  });
+});
+document.getElementById('btnWipe').addEventListener('click', doWipe);
+document.getElementById('consoleMin').addEventListener('click', function(){
+  var c = document.getElementById('console');
+  c.classList.toggle('min');
+  this.textContent = c.classList.contains('min') ? '+' : '\u2013';
+});
+
+/* ---------------- 首次引导 ---------------- */
+function showCoach(force){
+  if(!force && db.ui.coachMarkSeen) return;
+  elCoach.classList.add('show');
+  placeCoach();
+  if(force) db.ui.coachMarkSeen = false;
+}
+document.addEventListener('pointerdown', function(e){
+  if(elCoach.classList.contains('show') && !elCoach.contains(e.target)){
+    elCoach.classList.remove('show');
+    if(!db.ui.coachMarkSeen){ db.ui.coachMarkSeen = true; save(); }
+  }
+});
+/* 点击备注编辑器外部 → 自动保存并关闭 */
+document.addEventListener('pointerdown', function(e){
+  if(elNotePop.style.display !== 'none') closeNotePop(true);
+});
+
+/* ---------------- 模态 / toast ---------------- */
+var confirmResolve = null;
+function askConfirm(title, desc, okText, danger){
+  return new Promise(function(resolve){
+    confirmResolve = resolve;
+    document.getElementById('mTitle').textContent = title;
+    document.getElementById('mDesc').textContent = desc;
+    var ok = document.getElementById('mOk');
+    ok.textContent = okText || '确定';
+    ok.className = 'm-btn ' + (danger ? 'danger' : 'primary');
+    document.getElementById('mask').classList.add('open');
+  });
+}
+function closeConfirm(v){
+  document.getElementById('mask').classList.remove('open');
+  if(confirmResolve){ var r = confirmResolve; confirmResolve = null; r(v); }
+}
+document.getElementById('mCancel').addEventListener('click', function(){ closeConfirm(false); });
+document.getElementById('mOk').addEventListener('click', function(){ closeConfirm(true); });
+document.getElementById('mask').addEventListener('click', function(e){
+  if(e.target === document.getElementById('mask')) closeConfirm(false);
+});
+
+var toastTimer;
+function toast(msg){
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 1900);
+}
+
+/* ---------------- 窗口尺寸 ---------------- */
+var resizeTimer;
+window.addEventListener('resize', function(){
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(function(){
+    placeOrb(parseFloat(elOrb.style.left) || 0, parseFloat(elOrb.style.top) || 0, true);
+    positionStack();
+  }, 120);
+});
+
+/* ---------------- 启动 ---------------- */
+try{ db = load(); }catch(e){ db = seed(); }
+
+/* V1.9.2 / FR-27.4：钉住不跨重启保留 —— 每次启动都是未钉住。
+   历史数据里可能残留 pinned:true（旧版「点球即钉住」会写进去），这里一并复位。 */
+pinned = false;
+if(db.ui.pinned){ db.ui.pinned = false; save(); }
+timeScale = db.ui.timeScale || 1;
+elOrb.classList.toggle('pinned', false);
+document.getElementById('btnPin').classList.toggle('on', false);
+(function initScaleButtons(){
+  var btns = elScaleRow.querySelectorAll('.c-btn');
+  for(var i=0;i<btns.length;i++){
+    btns[i].classList.toggle('on', parseInt(btns[i].dataset.scale, 10) === timeScale);
+  }
+})();
+
+initOrb();
+renderAll();
+renderCount();
+scanReminders();
+
+if(!db.ui.coachMarkSeen) setTimeout(function(){ showCoach(false); }, 900);
+
+/* [build-renderer] 应用模式挂钩：仅渲染层注入，原型源码不含。
+   供末尾「应用模式适配层」调用，避免在闭包外直接引用内部变量（旧版因此静默失效）。 */
+if(typeof window !== 'undefined'){
+  window.__fushiHook = {
+    togglePin:  togglePin,
+    togglePanel: togglePanel,   /* V1.9.2：轻点球 = 开/合面板 */
+    openPanel:  openPanel,
+    closePanel: closePanel,
+    isPinned:   function(){ return pinned; },
+    isOpen:     function(){ return isOpen; },
+    closeConfirm: closeConfirm,   /* V1.9.4：遮罩不再整窗拦截后，点空白/失焦取消由适配层调用 */
+    leave:      function(){ document.dispatchEvent(new MouseEvent('mouseleave')); }
+  };
+}
+
+
+})();
+</script>
+
+<style id="appmode-style">
+  /* ===== Electron 应用模式（V1.9.4） ===== */
+  html,body{background:transparent!important;overflow:hidden!important}
+  /* 隐藏原型演示层：桌面壁纸 / 菜单栏 / Hero / Dock / 演示控制台 */
+  .wallpaper,.menubar,.hero,.dock,.console{display:none!important}
+  /* V1.9.4 / FR-29.3：弹窗去遮罩后，遮罩层不再整窗拦截指针——
+     否则透明背景会变成一块「隐形挡板」，挡住桌面点击。
+     拦截范围收缩到弹窗白卡本身；点弹窗以外的取消逻辑见适配层 pointerdown。 */
+  #mask{pointer-events:none!important}
+  #mask.open .modal{pointer-events:auto}
+</style>
+
+<script>
+/* ==========================================================
+   应用模式适配层（V1.9.4，仅在 Electron 中激活：存在 window.floatdo）
+   - 隐藏演示层，窗口内只剩 悬浮球 + 面板 + 提醒卡
+   - 拖球 = 移动系统窗口；未位移的按下抬起 = 开/合面板（走 __fushiHook.togglePanel，V1.9.2 起不再顺带钉住）
+   - 透明区域点击穿透，把事件让给桌面
+   - 窗口失焦：走原型同一条 mouseleave 路径（V1.8 立即收起，钉住除外）
+   - V1.9：拖动排序已修复（跨清单可拖 / 序号全局唯一连续 / 落点兜底 / 「松手 → #N」预览），
+     本层无需改动，修复随渲染层一并生效
+   - V1.9.1：新建默认分类跟随当前 Tab（FR-24）、面板高度变化即重定位防裁切（FR-25），
+     均为渲染层内部逻辑修复，本适配层无需改动
+   - V1.9.2：Tab 计数实时同步（FR-26）、点球=开合 / 点钉子=钉住 语义解耦（FR-27）。
+     适配层「未位移的按下抬起」改调 togglePanel —— 这是本轮唯一需要动的适配层代码
+   - 历史遗留的时间加速倍率一律复位为真实时间
+   ========================================================== */
+(function(){
+  if(!window.floatdo) return;                 /* 浏览器 / jsdom 直接退出 */
+  var api  = window.floatdo;
+  var hook = window.__fushiHook;
+  var orb  = document.getElementById('orb');
+  if(!hook){ console.error('[floatdo] __fushiHook 缺失，应用模式降级'); return; }
+
+  try {
+    var raw = localStorage.getItem('fushi.v1');
+    if(raw){
+      var d = JSON.parse(raw);
+      if(d && d.ui && d.ui.timeScale !== 1){
+        d.ui.timeScale = 1;
+        localStorage.setItem('fushi.v1', JSON.stringify(d));
+      }
+    }
+  } catch(e){}
+
+  /* 悬浮球：拖动移窗，轻点开合面板（V1.9.2 起不再顺带钉住）
+     说明：在 window 捕获阶段截断，原型内部的「假拖动」不会启动，
+     开合语义由适配层显式调用 hook，避免旧版「闭包外取不到内部函数」的静默失效 */
+  var down = false, moved = false, sx = 0, sy = 0;
+  function inOrb(e){ return orb && e.target && orb.contains(e.target); }
+
+  window.addEventListener('pointerdown', function(e){
+    if(e.button !== 0 || !inOrb(e)) return;
+    down = true; moved = false; sx = e.screenX; sy = e.screenY;
+    e.stopPropagation();
+  }, true);
+
+  window.addEventListener('pointermove', function(e){
+    if(!down) return;
+    var dx = e.screenX - sx, dy = e.screenY - sy;
+    if(!moved && Math.abs(dx) + Math.abs(dy) < 5) return;
+    moved = true;
+    if(dx || dy){ api.moveBy(dx, dy); sx = e.screenX; sy = e.screenY; }
+    e.stopPropagation();
+  }, true);
+
+  window.addEventListener('pointerup', function(e){
+    if(!down) return;
+    down = false;
+    if(!moved) hook.togglePanel();   /* V1.9.2：轻点只开合，钉住由钉子按钮独占 */
+    e.stopPropagation();
+  }, true);
+  window.addEventListener('pointercancel', function(){ down = false; });
+
+  /* 透明区域点击穿透 */
+  document.addEventListener('mousemove', function(e){
+    api.setPassthrough(e.target === document.body);
+  }, { passive:true });
+
+  /* V1.9.4 / FR-29.3：弹窗去遮罩后「点弹窗以外 = 取消」。
+     遮罩层已 pointer-events:none（不再整窗拦截），遮罩自身的 click 取消
+     在应用模式永远不会触发，改为文档级 pointerdown：
+     弹窗开着 + 按下点不在弹窗白卡内 → closeConfirm(false)。
+     透明区域本就走穿透（target=body），桌面点击不会误伤。 */
+  var mask = document.getElementById('mask');
+  var modalEl = mask ? mask.querySelector('.modal') : null;
+  document.addEventListener('pointerdown', function(e){
+    if(!mask || !mask.classList.contains('open')) return;
+    if(modalEl && modalEl.contains(e.target)) return;
+    if(hook.closeConfirm) hook.closeConfirm(false);
+  }, true);
+
+  /* 失焦 → 与原型一致的收起路径（mouseleave 内部已排除钉住态）；
+     V1.9.4：弹窗开着时失焦，弹窗一并取消（确认是瞬时意图，不值得跨焦点保留） */
+  window.addEventListener('blur', function(){
+    if(mask && mask.classList.contains('open') && hook.closeConfirm) hook.closeConfirm(false);
+    hook.leave();
+  });
+})();
+</script>
+</body>
+</html>

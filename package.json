@@ -1,0 +1,14 @@
+{
+  "name": "floatdo",
+  "productName": "支点",
+  "version": "1.9.5",
+  "description": "支点 — macOS 桌面悬浮待办：绝对优先级 + 截止时间 + 强制确认提醒",
+  "main": "main.cjs",
+  "private": true,
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^33.0.0"
+  }
+}
