@@ -611,7 +611,7 @@ button.lm:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 
 <main class="hero">
   <h1>支点</h1>
-  <div class="sub">支点 · V1.9.5</div>
+  <div class="sub">支点 · V1.9.6</div>
   <p>macOS 桌面悬浮球式待办清单。<b>序号告诉你先做哪件，时间到了它会追着你确认。</b></p>
   <ul>
     <li><span class="d"></span><span><b>绝对优先级</b>：唯一序号 #1 #2 #3…，拖一次即重排</span></li>
@@ -660,7 +660,7 @@ button.lm:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
       <i>Esc</i> 对提醒卡片<b>无效</b>
     </div>
     <div class="c-ico-lab">App 图标 · V1.8 已定稿（白底镂空小老鼠，本轮暂缓实施）</div>
-    <div class="c-ico-lab">V1.9：拖动改为视觉顺序驱动，序号全局唯一连续，高亮全局唯一<br>V1.9.1：新建默认分类跟随当前清单；输入区展开不再被窗口下沿裁切<br>V1.9.2：分类 Tab 数字随完成/新建/删除实时更新；点球只开合，钉住须手动点钉子<br>V1.9.3：「已完成」分隔栏新增「清空」，一键清掉全部已完成项（确认弹窗防误触）<br>V1.9.4：确认弹窗去遮罩——不再压暗/模糊背景，弹窗白卡直接浮出<br>V1.9.5：应用更名为「支点」——只找那个能撬动全局的点</div>
+    <div class="c-ico-lab">V1.9：拖动改为视觉顺序驱动，序号全局唯一连续，高亮全局唯一<br>V1.9.1：新建默认分类跟随当前清单；输入区展开不再被窗口下沿裁切<br>V1.9.2：分类 Tab 数字随完成/新建/删除实时更新；点球只开合，钉住须手动点钉子<br>V1.9.3：「已完成」分隔栏新增「清空」，一键清掉全部已完成项（确认弹窗防误触）<br>V1.9.4：确认弹窗去遮罩——不再压暗/模糊背景，弹窗白卡直接浮出<br>V1.9.5：应用更名为「支点」——只找那个能撬动全局的点<br>V1.9.6：中文输入法组字时，回车/取消键不再误触发排期、保存或收面板</div>
     <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
     <linearGradient id="bBg" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#F2F6FD"/>
@@ -898,7 +898,7 @@ button.lm:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 'use strict';
 
 /* ==========================================================
-   「支点」V1.9.5 交互原型
+   「支点」V1.9.6 交互原型
    渲染层 = 交互原型 + 应用模式适配层（单文件，零外部依赖）
 
    V1.1：三色优先级 → 唯一序号绝对优先级
@@ -1225,6 +1225,27 @@ var state = { query:'' };
 var draft = { listId:null, dueAt:null };
 var dueTarget = { type:'draft' };
 var noteTargetId = null;
+
+/* ---------------- V1.9.6 / FR-31：IME 组字态守卫 ----------------
+   GitHub issue #1：中文/日文/韩文输入法在候选未上屏时，「确认候选」的 Enter
+   与「取消候选」的 Escape 同样会派发 keydown。旧实现一律 preventDefault +
+   直接执行业务动作，于是确认拼写的那一次回车会误开排期 / 误保存 / 误创建，
+   打断输入心流；输入法按 Esc 取消候选也会误收面板。
+   判据取并集：e.isComposing / keyCode 229 / key === 'Process'（Safari 系），
+   以及自维护的 composition 状态（覆盖部分输入法未设置 isComposing 的情形）。
+   命中时 handler 直接 return —— 刻意不 preventDefault，把按键完整交还输入法
+   完成上屏；候选关闭后的下一次独立按键行为完全不变。
+   ------------------------------------------------------------------ */
+var imeActive = false;
+function imeBusy(e){
+  return !!(e.isComposing || e.keyCode === 229 || e.key === 'Process' || imeActive);
+}
+document.addEventListener('compositionstart', function(){ imeActive = true; }, true);
+document.addEventListener('compositionend',   function(){ imeActive = false; }, true);
+/* 组字过程中窗口失焦 / 输入框换焦点时，compositionend 可能不会派发；
+   不复位会让 imeActive 永远为 true、吞掉后续所有 Enter / Escape。 */
+window.addEventListener('blur', function(){ imeActive = false; });
+document.addEventListener('focusout', function(){ imeActive = false; }, true);
 
 /* ---------------- 悬浮球 ---------------- */
 function placeOrb(x, y, persist){
@@ -1649,6 +1670,7 @@ function inlineAddList(){
     toast('已创建清单「' + name + '」');
   }
   input.addEventListener('keydown', function(e){
+    if(imeBusy(e)) return;                       /* FR-31：IME 组字态按键交还输入法 */
     if(e.key === 'Enter'){ e.preventDefault(); commit(); }
     if(e.key === 'Escape'){ committed = true; input.remove(); }
   });
@@ -1673,6 +1695,7 @@ function inlineRenameList(tab){
     renderAll();
   }
   input.addEventListener('keydown', function(e){
+    if(imeBusy(e)) return;                       /* FR-31：IME 组字态按键交还输入法 */
     if(e.key === 'Enter'){ e.preventDefault(); finish(true); }
     if(e.key === 'Escape') finish(false);
   });
@@ -2183,6 +2206,7 @@ function startEdit(el, id){
     renderList(false);
   }
   input.addEventListener('keydown', function(e){
+    if(imeBusy(e)) return;                       /* FR-31：IME 组字态按键交还输入法 */
     if(e.key === 'Enter'){ e.preventDefault(); finish(true); }
     if(e.key === 'Escape') finish(false);
   });
@@ -2536,6 +2560,7 @@ document.getElementById('npClear').addEventListener('click', function(){
   toast('已清除备注');
 });
 elNpText.addEventListener('keydown', function(e){
+  if(imeBusy(e)) return;                       /* FR-31：IME 组字态按键交还输入法 */
   if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); closeNotePop(true); }
   if(e.key === 'Escape'){ e.stopPropagation(); closeNotePop(false); }
 });
@@ -2628,6 +2653,7 @@ document.getElementById('dpClear').addEventListener('click', function(){
 });
 /* 弹层内任何位置回车都等于点主按钮（新建流程） */
 elDuePop.addEventListener('keydown', function(e){
+  if(imeBusy(e)) return;                       /* FR-31：IME 组字态按键交还输入法 */
   if(e.key !== 'Enter' || !composePending) return;
   e.preventDefault();
   document.getElementById('dpOk').click();
@@ -2655,6 +2681,7 @@ function resetDuePopLabels(){
 }
 
 elNew.addEventListener('keydown', function(e){
+  if(imeBusy(e)) return;                       /* FR-31：IME 组字态按键交还输入法 */
   if(e.key !== 'Enter') return;
   e.preventDefault();
   if(composePending){ confirmCompose(); return; }
@@ -2790,6 +2817,7 @@ document.getElementById('searchClear').addEventListener('click', function(){
 
 /* Esc：只作用于面板与编辑态，对提醒卡片无效（FR-14.8） */
 document.addEventListener('keydown', function(e){
+  if(imeBusy(e)) return;                       /* FR-31：IME 组字态按键交还输入法 */
   if(e.key !== 'Escape') return;
   if(document.getElementById('mask').classList.contains('open')){ closeConfirm(false); return; }
   if(elMenu.classList.contains('open')){ elMenu.classList.remove('open'); return; }
