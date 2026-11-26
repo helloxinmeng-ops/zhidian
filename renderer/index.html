@@ -179,6 +179,8 @@ input,select{font-family:inherit;font-size:inherit;color:inherit}
   pointer-events:none;transition:opacity .18s ease-in, transform .18s ease-in;}
 .panel.open{opacity:1;transform:scale(1);pointer-events:auto;
   transition:opacity .22s var(--ease-panel), transform .22s var(--ease-panel)}
+/* V2.1.0 / FR-36.1：移出页面瞬隐——去掉淡出与缩放过渡，直接不可见 */
+.panel.instant,.rcard.instant{transition:none !important;opacity:0 !important;pointer-events:none !important}
 
 .p-head{display:flex;align-items:center;justify-content:space-between;padding:13px 12px 9px 16px;flex:0 0 auto}
 .p-count{font-size:12px;color:var(--text-2);font-variant-numeric:tabular-nums}
@@ -657,7 +659,8 @@ button.lm:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .st-empty{font-size:11px;color:var(--text-3);padding:6px 0}
 /* 悬停待办显示的完成详情（名称/分类/完成时间/耗时/备注）—— 固定小窗右侧并排，不遮挡列表 */
 .st-tip{position:absolute;z-index:9;width:196px;max-width:calc(100% - 16px);padding:10px 11px;border-radius:10px;
-  background:#1C1C1E;color:#fff;box-shadow:var(--shadow-card);font-size:11px;line-height:1.5;pointer-events:none}
+  background:#1C1C1E;color:#fff;box-shadow:var(--shadow-card);font-size:11px;line-height:1.5;
+  pointer-events:auto;user-select:text;-webkit-user-select:text;cursor:text}
 .st-tip-h{font-size:12px;font-weight:600;margin-bottom:6px;word-break:break-all}
 .st-tip-l{display:flex;gap:7px;color:rgba(255,255,255,.58)}
 .st-tip-l b{color:rgba(255,255,255,.94);font-weight:500;word-break:break-all}
@@ -838,7 +841,7 @@ button.lm:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 </button>
 
 <div class="coach" id="coach">
-  <b>单击球开合面板</b>
+  <b>悬停 / 点击球展开面板</b>
   <span>点钉子钉住 · 拖动换位置</span>
   <span class="arw" style="right:-5px;top:calc(50% - 5px);transform:rotate(-45deg)"></span>
 </div>
@@ -1029,7 +1032,7 @@ button.lm:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 
 /* ==========================================================
    「支点」V1.9.6 交互原型
-渲染层 = 交互原型 + 应用模式适配层（单文件，零外部依赖）
+   对应 PRD：浮事-PRD-需求文档.md (V2.0)
 
    V1.1：三色优先级 → 唯一序号绝对优先级
          新增截止时间 + 紧迫度分区
@@ -1367,7 +1370,7 @@ var elBtnStats = document.getElementById('btnStats');
 var elTP = document.getElementById('tp'), elTPMin = document.getElementById('tpMin');
 var statsState = { open:false, y:0, m:0, sel:null, tipId:null };
 var pickerState = { y:0 };
-var tpTarget = null, tpTimer = null;
+var tpTarget = null, tpTimer = null, tpTyped = false;  /* tpTyped: V2.0.1 / FR-35 输入守护标记 */
 var CAT_COLORS = ['#2F6FED','#34A853','#F5A623','#8E8E93','#AF52DE','#5AC8FA'];
 
 var state = { query:'' };
@@ -1400,7 +1403,9 @@ document.addEventListener('focusout', function(){ imeActive = false; }, true);
 function placeOrb(x, y, persist){
   var w = 52, vw = window.innerWidth, vh = window.innerHeight, pad = 8;
   x = clamp(x, pad, vw - w - pad);
-  y = clamp(y, 30, vh - w - pad);
+  /* V2.1.0 / FR-37.2：y 下限由旧窗口的 30 放开到 pad——演示球可达整个可用区域（顶部不再被锁）。
+     真实应用的可达边界由主屏 workArea + 全屏透明层决定，见 PRD FR-37.1/.6 */
+  y = clamp(y, pad, vh - w - pad);
   elOrb.style.left = x + 'px';
   elOrb.style.top = y + 'px';
   if(persist !== false){ db.ui.orbX = x; db.ui.orbY = y; save(); }
@@ -1436,7 +1441,7 @@ function endDrag(){
   drag.active = false;
   elOrb.classList.remove('dragging');
   if(moved) placeOrb(parseFloat(elOrb.style.left), parseFloat(elOrb.style.top), true);
-  else togglePanel();          /* V1.9.2：轻点只开合，不再顺带钉住 */
+  else togglePanel();          /* V1.9.2：轻点只开合；V2.1.1：ensure-open 只展开不收 */
 }
 elOrb.addEventListener('pointerup', endDrag);
 elOrb.addEventListener('pointercancel', function(){ drag.active = false; elOrb.classList.remove('dragging'); });
@@ -1449,28 +1454,40 @@ function openPanel(){
   clearTimeout(closeTimer); closeTimer = null;
   if(isOpen) return;
   isOpen = true;
+  elPanel.classList.remove('instant');   /* V2.1.0：清掉可能的瞬隐残留类 */
   elPanel.classList.add('open');
   positionStack();
   requestAnimationFrame(positionStack);
 }
-function closePanel(){
+function closePanel(instant){
   clearTimeout(openTimer); openTimer = null;
   clearTimeout(closeTimer); closeTimer = null;
   if(!isOpen) return;
   isOpen = false;
+  /* V2.1.0 / FR-36：移出页面（instant=true）走无过渡瞬隐，不出现「缩成顶部一条再淡出」；
+     V2.1.1 / FR-38：点球不再关闭面板（ensure-open），仅 Esc 关闭仍保留原淡出过渡 */
+  if(instant){
+    elPanel.classList.add('instant');
+    if(cardVisible) elCard.classList.add('instant');   /* FR-36.3 提醒卡同路径瞬隐 */
+  }
   elPanel.classList.remove('open');
   closeMenus(); closeDuePop();
-  positionStack();
+  /* V2.1.0 / FR-36.1：瞬隐路径跳过 positionStack 的 top 重算（避免「缩到顶部」的中间态）。
+     instant 类保持到下次 openPanel 时才清——若两帧内就撤销，浏览器会把 transition:none
+     的撤销当成一次新的淡出重绘，面板反而重新可见（真实内核截图实测到的坑）。 */
+  if(!instant) positionStack();
 }
 /* V1.9.2 / FR-27：开合与钉住解耦。
    旧实现里「点球」和「点钉子」都调 togglePin —— 于是点开面板 = 钉住，且 pinned 被写进
    localStorage，重启后依旧钉着（用户报障：进详情页默认钉住、移出不收）。
    新语义：
-     · 点球 togglePanel() —— 只管开/合，不碰 pinned；已钉住时点球＝暂时收起，钉住不变
+     · 点球 togglePanel() —— V2.1.1 起只展开不收起（ensure-open），不碰 pinned；钉住态统一
      · 点钉子 togglePin() —— 只管钉住；钉住即展开；取消钉住不立即收（交给移出即收）
-     · pinned 不持久化 —— 每次启动都是未钉住（FR-27.4） */
+     · pinned 不持久化 —— 每次启动都是未钉住（FR-27.4）
+     · 收起只靠：移出命中区 / mouseleave（未钉住）与 Esc（手动淡出） */
 function togglePanel(){
-  if(isOpen) closePanel(); else openPanel();
+  /* V2.1.1 / FR-38.1：ensure-open —— 只展开、已展开不再收起（钉住态统一） */
+  if(!isOpen) openPanel();
 }
 function togglePin(){
   pinned = !pinned;
@@ -1570,13 +1587,15 @@ document.addEventListener('mousemove', function(e){
     if(!isOpen && !openTimer) openTimer = setTimeout(openPanel, 140);
   } else {
     clearTimeout(openTimer); openTimer = null;
-    if(isOpen && !closeTimer) closeTimer = setTimeout(closePanel, CLOSE_GRACE);
+    /* V2.1.2 / FR-39：移出命中区保留 120ms 防缝隙误关缓冲，到点走瞬隐（补 V2.1.0 漏掉的主路径；
+       全屏层下移到桌面仍算窗口内，不触发 mouseleave，旧版此处 setTimeout(closePanel,…) 无 instant = 淡出 */
+    if(isOpen && !closeTimer) closeTimer = setTimeout(function(){ closePanel(true); }, CLOSE_GRACE);
   }
 }, { passive:true });
 document.addEventListener('mouseleave', function(){
   clearTimeout(openTimer); openTimer = null;
   clearTimeout(closeTimer); closeTimer = null;
-  if(isOpen && !pinned) closePanel();
+  if(isOpen && !pinned) closePanel(true);   /* V2.1.0 / FR-36.1：移出页面瞬隐 */
 });
 
 function closeMenus(){
@@ -1595,8 +1614,13 @@ function visible(){
     return true;
   });
   var undone = arr.filter(function(t){ return !t.done; });
-  var done = arr.filter(function(t){ return t.done; })
-                .sort(function(a,b){ return (b.doneAt||0) - (a.doneAt||0); });
+  /* V2.0.1 / FR-34.1/.2：已完成区仅「全部」tab 展示、且仅当天完成的项；
+     历史完成不删除、仍在库中，日历按 doneAt 照常可查。 */
+  var todayK = dayKey(now);
+  var done = (db.ui.listId === 'all'
+                ? arr.filter(function(t){ return t.done && t.doneAt != null && dayKey(t.doneAt) === todayK; })
+                : [])
+              .sort(function(a,b){ return (b.doneAt||0) - (a.doneAt||0); });
   var overdue = [], soon = [], main = [];
   function byRank(a,b){
     return (a.rank == null ? 99999 : a.rank) - (b.rank == null ? 99999 : b.rank);
@@ -2008,11 +2032,12 @@ function renderList(animate){
       html += '<div class="empty" style="padding:26px 20px 20px"><div class="e-t">当前视图没有未完成的待办</div><div class="e-s">好好休息一下</div></div>';
     }
     if(v.done.length){
+      /* V2.0.1 / FR-34.3：移除「清空」按钮——展示收敛到当天后，保留它会产生
+         「清的是当天还是全部历史」的歧义；用户裁定直接移除入口。 */
       html += '<div class="done-sep">' +
         '<button class="lbl' + (db.ui.doneCollapsed ? ' folded':'') + '" id="foldDone">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>' +
-        '已完成 · ' + v.done.length + '</button>' +
-        '<button class="clr" id="clearDone">清空</button></div>';
+        '今天已完成 · ' + v.done.length + '</button></div>';
       if(!db.ui.doneCollapsed){
         v.done.forEach(function(t){ html += todoHTML(t, view, now, 'done'); });
       }
@@ -2078,30 +2103,6 @@ function bindListEvents(){
   var fd = elList.querySelector('#foldDone');
   if(fd) fd.addEventListener('click', function(){
     db.ui.doneCollapsed = !db.ui.doneCollapsed; save(); renderList(false); positionStack();
-  });
-  /* V1.9.3 / FR-28：一键清空已完成 —— 复用 askConfirm 弹窗（与「清空全部数据」同一防误触层级），
-     范围=全部分类，不做撤销（用户拍板）。执行前把完成动效的未收尾状态一并清干净：
-     pendingDone 计时器（含 fxBusy 计数回退）、未落地的飞勾、庆祝层判定残留。 */
-  var cd = elList.querySelector('#clearDone');
-  if(cd) cd.addEventListener('click', function(){
-    var n = db.todos.filter(function(t){ return t.done; }).length;
-    if(!n) return;
-    askConfirm('清空已完成？', '共 ' + n + ' 条已完成待办会被删除，且无法恢复。', '清空 ' + n + ' 条', true)
-      .then(function(ok){
-        if(!ok) return;
-        db.todos.forEach(function(t){
-          if(!t.done) return;
-          if(pendingDone[t.id]){ clearTimeout(pendingDone[t.id]); delete pendingDone[t.id];
-            fxBusy = Math.max(0, fxBusy - 1); }
-          flyTickCancel(t);
-          delete pendingFly[t.id];
-          delete forced[t.id];
-        });
-        db.todos = db.todos.filter(function(t){ return !t.done; });
-        normalizeRanks(); save();
-        renderList(true); renderCount(); positionStack(); scanReminders();
-        toast('已清空 ' + n + ' 条已完成');
-      });
   });
   var cf = elList.querySelector('#clearFilter');
   if(cf) cf.addEventListener('click', function(){
@@ -3350,17 +3351,27 @@ function hideTimePrompt(commit){
     var v = parseInt(elTPMin.value, 10);
     if(isFinite(v) && v >= 0 && v <= 999){ t.spent = v; save(); toast('已记录耗时 ' + fmtDur(v)); }
   }
-  tpTarget = null; elTP.classList.remove('show');
+  tpTarget = null; tpTyped = false; elTP.classList.remove('show');
   clearTimeout(tpTimer);
 }
 function showTimePrompt(t){
   if(statsState.open) return;                 /* 统计视图里不弹 */
   tpTarget = t.id; elTPMin.value = '';
+  tpTyped = false;                            /* V2.0.1 / FR-35：本次补录是否已收到输入 */
   elTP.classList.add('show');
   clearTimeout(tpTimer);
-  tpTimer = setTimeout(function(){ hideTimePrompt(false); }, 6000);
+  /* V2.0.1 / FR-35.1：5 秒无输入自动收起；FR-35.2：一旦输入则取消定时器、不再自动收起 */
+  tpTimer = setTimeout(function(){
+    if(tpTyped) return;
+    hideTimePrompt(false);
+  }, 5000);
   /* 自动收起前未填 → 等同跳过，不写 spent */
 }
+/* V2.0.1 / FR-35.2：首个有效输入即置守护并取消定时器；删空也不恢复自动收起（FR-35.3） */
+elTPMin.addEventListener('input', function(){
+  tpTyped = true;
+  clearTimeout(tpTimer); tpTimer = null;
+});
 document.getElementById('tpOk').addEventListener('click', function(){ hideTimePrompt(true); });
 document.getElementById('tpSkip').addEventListener('click', function(){ hideTimePrompt(false); });
 document.getElementById('tpX').addEventListener('click', function(){ hideTimePrompt(false); });
@@ -3577,7 +3588,15 @@ function showTodoTip(row){
   if(y < 8) y = 8;
   elStTip.style.left = x + 'px'; elStTip.style.top = y + 'px';
 }
-function hideTodoTip(){ elStTip.hidden = true; statsState.tipId = null; }
+/* V2.0.1 / FR-33：延时关闭——鼠标从行移向详情框时给 300ms 桥接间隙，
+   进入详情框即取消；详情框内停留/移动不关闭，离开后才启动延时。 */
+var tipHideTimer = null;
+function cancelTipHide(){ if(tipHideTimer){ clearTimeout(tipHideTimer); tipHideTimer = null; } }
+function scheduleTipHide(){
+  cancelTipHide();
+  tipHideTimer = setTimeout(function(){ elStTip.hidden = true; statsState.tipId = null; tipHideTimer = null; }, 300);
+}
+function hideTodoTip(){ cancelTipHide(); elStTip.hidden = true; statsState.tipId = null; }
 
 /* --- 事件绑定 --- */
 elBtnStats.addEventListener('click', function(){ toggleStats(); });
@@ -3617,12 +3636,16 @@ elStDay.addEventListener('click', function(e){
 });
 elStDay.addEventListener('mouseover', function(e){
   var row = e.target.closest ? e.target.closest('.st-pop-row') : null;
-  if(row) showTodoTip(row);
+  if(row){ cancelTipHide(); showTodoTip(row); }
 });
 elStDay.addEventListener('mouseout', function(e){
   var row = e.target.closest ? e.target.closest('.st-pop-row') : null;
-  if(row && (!e.relatedTarget || !row.contains(e.relatedTarget))) hideTodoTip();
+  if(row && (!e.relatedTarget || !row.contains(e.relatedTarget))) scheduleTipHide();
 });
+/* 详情框自身：进入/停留取消关闭，离开后延时关闭 */
+elStTip.addEventListener('mouseenter', cancelTipHide);
+elStTip.addEventListener('mousemove', cancelTipHide);
+elStTip.addEventListener('mouseleave', scheduleTipHide);
 elStView.addEventListener('scroll', hideTodoTip, true);
 
 var toastTimer;
@@ -3672,7 +3695,18 @@ window.__calHook = {
   statsState: statsState, byId: byId, completeTodo: completeTodo,
   itemBg: itemBg, showTodoTip: showTodoTip, hideTodoTip: hideTodoTip, closeDayPop: closeDayPop,
   firstStatMonth: firstStatMonth, pickerRange: pickerRange, openPicker: openPicker,
-  closePicker: closePicker, pickerState: pickerState
+  closePicker: closePicker, pickerState: pickerState,
+  cancelTipHide: cancelTipHide, scheduleTipHide: scheduleTipHide,
+  getTipHideTimer: function(){ return tipHideTimer; },
+  getTpTyped: function(){ return tpTyped; }, getTpTimer: function(){ return tpTimer; },
+  vnow: vnow,
+  /* V2.1.0 验收接口 */
+  placeOrb: placeOrb, closePanel: closePanel, openPanel: openPanel, positionStack: positionStack,
+  togglePanel: togglePanel, isOpen: function(){ return isOpen; }, isPinned: function(){ return pinned; },
+  getOrbPos: function(){ return { x: parseFloat(elOrb.style.left)||0, y: parseFloat(elOrb.style.top)||0 }; },
+  getPanelBox: function(){ var r = elPanel.getBoundingClientRect(); return { top:r.top, left:r.left, bottom:r.bottom, right:r.right }; },
+  isInstant: function(){ return elPanel.classList.contains('instant'); },
+  isCardInstant: function(){ return elCard.classList.contains('instant'); }
 };
 renderStats();
 
@@ -3683,13 +3717,17 @@ if(!db.ui.coachMarkSeen) setTimeout(function(){ showCoach(false); }, 900);
 if(typeof window !== 'undefined'){
   window.__fushiHook = {
     togglePin:  togglePin,
-    togglePanel: togglePanel,   /* V1.9.2：轻点球 = 开/合面板 */
+    togglePanel: togglePanel,   /* V2.1.1 / FR-38：ensure-open 只展开不收（钉住态统一） */
     openPanel:  openPanel,
     closePanel: closePanel,
     isPinned:   function(){ return pinned; },
     isOpen:     function(){ return isOpen; },
     closeConfirm: closeConfirm,   /* V1.9.4：遮罩不再整窗拦截后，点空白/失焦取消由适配层调用 */
-    leave:      function(){ document.dispatchEvent(new MouseEvent('mouseleave')); }
+    leave:      function(){ document.dispatchEvent(new MouseEvent('mouseleave')); },
+    /* V2.1.0 / FR-37：全屏层下拖球=层内移动球元素；暴露定位与坐标接口给适配层 */
+    placeOrb:   placeOrb,
+    getOrbPos:  function(){ return { x: parseFloat(elOrb.style.left)||0, y: parseFloat(elOrb.style.top)||0 }; },
+    setWorkArea: function(wa){ window.__fushiWorkArea = wa; }
   };
 }
 
@@ -3713,7 +3751,8 @@ if(typeof window !== 'undefined'){
 /* ==========================================================
    应用模式适配层（V1.9.4，仅在 Electron 中激活：存在 window.floatdo）
    - 隐藏演示层，窗口内只剩 悬浮球 + 面板 + 提醒卡
-   - 拖球 = 移动系统窗口；未位移的按下抬起 = 开/合面板（走 __fushiHook.togglePanel，V1.9.2 起不再顺带钉住）
+   - V2.1.0：拖球 = 层内移动球元素（placeOrb + 视口边界夹取，窗口铺满 workArea 不动）；未位移的按下抬起 → togglePanel（V2.1.1 起只展开不收）
+   - V2.1.0：坐标迁移——老用户 orbX/orbY 从「窗口内相对」折算为「屏幕绝对（=相对 workArea 视口）」
    - 透明区域点击穿透，把事件让给桌面
    - 窗口失焦：走原型同一条 mouseleave 路径（V1.8 立即收起，钉住除外）
    - V1.9：拖动排序已修复（跨清单可拖 / 序号全局唯一连续 / 落点兜底 / 「松手 → #N」预览），
@@ -3722,6 +3761,9 @@ if(typeof window !== 'undefined'){
      均为渲染层内部逻辑修复，本适配层无需改动
    - V1.9.2：Tab 计数实时同步（FR-26）、点球=开合 / 点钉子=钉住 语义解耦（FR-27）。
      适配层「未位移的按下抬起」改调 togglePanel —— 这是本轮唯一需要动的适配层代码
+   - V2.1.1：点球语义升级为 ensure-open（只展开不收、钉住态统一）；适配层调用点不变，语义随 hook 生效
+   - V2.1.2：hit-test 移出命中区保留 120ms 防误关缓冲、到点走 closePanel(true) 瞬隐
+     （补 V2.1.0 漏掉的全屏层主路径：层内移出不算 mouseleave，旧版无 instant = 淡出）；在原型 IIFE 内，适配层无需改动
    - 历史遗留的时间加速倍率一律复位为真实时间
    ========================================================== */
 (function(){
@@ -3742,36 +3784,46 @@ if(typeof window !== 'undefined'){
     }
   } catch(e){}
 
-  /* 悬浮球：拖动移窗，轻点开合面板（V1.9.2 起不再顺带钉住）
-     说明：在 window 捕获阶段截断，原型内部的「假拖动」不会启动，
-     开合语义由适配层显式调用 hook，避免旧版「闭包外取不到内部函数」的静默失效 */
-  var down = false, moved = false, sx = 0, sy = 0;
+  /* V2.1.0 / FR-37.2：悬浮球拖动 = 层内移动球元素（不再移窗）。
+     窗口铺满主屏 workArea 且固定不动，视口坐标即相对 workArea 的坐标；
+     placeOrb 内部按 innerWidth/innerHeight 夹取 = 夹取在工作区内（FR-37.6）。
+     在 window 捕获阶段截断，原型内部「假拖动」不启动；开合由 hook 显式调用。 */
+  var down = false, moved = false, sx = 0, sy = 0, ox = 0, oy = 0;
   function inOrb(e){ return orb && e.target && orb.contains(e.target); }
 
   window.addEventListener('pointerdown', function(e){
     if(e.button !== 0 || !inOrb(e)) return;
-    down = true; moved = false; sx = e.screenX; sy = e.screenY;
+    down = true; moved = false;
+    sx = e.clientX; sy = e.clientY;
+    var p = hook.getOrbPos ? hook.getOrbPos() : { x:parseFloat(orb.style.left)||0, y:parseFloat(orb.style.top)||0 };
+    ox = p.x; oy = p.y;
     e.stopPropagation();
   }, true);
 
   window.addEventListener('pointermove', function(e){
     if(!down) return;
-    var dx = e.screenX - sx, dy = e.screenY - sy;
+    var dx = e.clientX - sx, dy = e.clientY - sy;
     if(!moved && Math.abs(dx) + Math.abs(dy) < 5) return;
     moved = true;
-    if(dx || dy){ api.moveBy(dx, dy); sx = e.screenX; sy = e.screenY; }
+    if(dx || dy && hook.placeOrb){ hook.placeOrb(ox + dx, oy + dy, false); }
     e.stopPropagation();
   }, true);
 
   window.addEventListener('pointerup', function(e){
     if(!down) return;
     down = false;
-    if(!moved) hook.togglePanel();   /* V1.9.2：轻点只开合，钉住由钉子按钮独占 */
+    if(!moved) hook.togglePanel();   /* V2.1.1 / FR-38：ensure-open 只展开不收，钉住由钉子按钮独占 */
+    else if(hook.placeOrb){          /* 拖动结束：持久化最终球位置 */
+      var p = hook.getOrbPos ? hook.getOrbPos() : { x:parseFloat(orb.style.left)||0, y:parseFloat(orb.style.top)||0 };
+      hook.placeOrb(p.x, p.y, true);
+    }
     e.stopPropagation();
   }, true);
   window.addEventListener('pointercancel', function(){ down = false; });
 
-  /* 透明区域点击穿透 */
+  /* V2.1.0 / FR-37.3：全屏透明层默认全穿透（主进程 createWindow 已设）；
+     命中球/面板/卡片/弹层时临时关闭穿透（e.target 不是 body），透明区维持穿透。
+     setIgnoreMouseEvents(true,{forward:true}) 下 mousemove 仍转发到渲染层做 hit-test。 */
   document.addEventListener('mousemove', function(e){
     api.setPassthrough(e.target === document.body);
   }, { passive:true });
@@ -3795,6 +3847,32 @@ if(typeof window !== 'undefined'){
     if(mask && mask.classList.contains('open') && hook.closeConfirm) hook.closeConfirm(false);
     hook.leave();
   });
+
+  /* V2.1.0 / FR-37.5：老用户球坐标迁移（一次性）。
+     旧版 orbX/orbY 相对 540×800 窗口；窗口位置存于 window-position.json。
+     新版窗口铺满 workArea，视口坐标 = 相对 workArea；折算：
+       新坐标 = 旧窗口位置 + 旧相对坐标 - workArea 原点
+     折算后夹取到工作区、写回 db.ui、重新 placeOrb。无 legacy 则用默认右下角。
+     initOrb() 已在原型启动段用旧相对坐标定位过一次，这里迁移后覆盖，无视觉闪烁（透明层）。 */
+  (async function migrateOrbCoords(){
+    try {
+      if(!api.getLegacyWindowPos || !api.getWorkArea || !hook.placeOrb) return;
+      var legacy = await api.getLegacyWindowPos();
+      var wa = await api.getWorkArea();
+      var raw = localStorage.getItem('fushi.v1');
+      if(!raw || !legacy) return;                    /* 全新用户 / 无历史窗口位置 → 用原型默认位 */
+      var d = JSON.parse(raw);
+      if(!d || !d.ui) return;
+      var ox = d.ui.orbX, oy = d.ui.orbY;
+      if(typeof ox !== 'number' || typeof oy !== 'number') return;
+      /* 折算到相对 workArea 的视口坐标 */
+      var nx = legacy.x + ox - wa.x;
+      var ny = legacy.y + oy - wa.y;
+      d.ui.orbX = nx; d.ui.orbY = ny;
+      localStorage.setItem('fushi.v1', JSON.stringify(d));
+      hook.placeOrb(nx, ny, false);                  /* placeOrb 内 clamp 到工作区，persist=false 避免重复写 */
+    } catch(e){}
+  })();
 })();
 </script>
 </body>
